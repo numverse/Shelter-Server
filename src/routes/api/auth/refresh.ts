@@ -1,0 +1,66 @@
+﻿import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+import * as userRepo from "../../../database/repository/userRepo";
+import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../../config";
+import { ErrorResponse, SuccessResponse } from "src/schemas/response";
+import { INVALID_OR_EXPIRED_REFRESH_TOKEN, NO_REFRESH_TOKEN, TOKEN_GENERATION_FAILED } from "src/schemas/errors";
+
+const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
+  fastify.post("/refresh", {
+    schema: {
+      response: {
+        200: SuccessResponse,
+        400: ErrorResponse,
+        401: ErrorResponse,
+        500: ErrorResponse,
+      },
+      tags: ["Auth"],
+      summary: "Refresh access token",
+      description: "Get a new access token using a refresh token. The refresh token is single-use and a new one will be issued.",
+      security: [],
+    },
+    handler: async (request, reply) => {
+      // Read refresh token from cookie
+      const refreshToken = request.cookies?.rt;
+      if (!refreshToken) {
+        return reply.status(400).send(NO_REFRESH_TOKEN);
+      }
+
+      // Verify JWT refresh token
+      const payload = fastify.tokenManager.verifyToken("refresh", refreshToken);
+      if (!payload) {
+        return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
+      }
+
+      // Find user and verify token is stored in DB (single-use check)
+      const user = await userRepo.findUserByRefreshToken(refreshToken);
+      if (!user || user.id !== payload.userId) {
+        return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
+      }
+
+      // Invalidate the old refresh token (single-use)
+      await userRepo.clearRefreshToken(user.id);
+
+      // Generate new tokens
+      const tokens = await fastify.tokenManager.createTokens({
+        userId: user.id,
+        email: user.email,
+      });
+      if (!tokens) {
+        return reply.status(500).send(TOKEN_GENERATION_FAILED);
+      }
+
+      return reply
+        .setCookie("at", tokens.accessToken, {
+          ...COOKIE_OPTIONS,
+          maxAge: ACCESS_TOKEN_MAX_AGE,
+        })
+        .setCookie("rt", tokens.refreshToken, {
+          ...COOKIE_OPTIONS,
+          maxAge: REFRESH_TOKEN_MAX_AGE,
+        })
+        .send({ success: true });
+    },
+  });
+};
+
+export default plugin;
