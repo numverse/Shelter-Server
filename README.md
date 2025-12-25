@@ -15,7 +15,7 @@
 
 [![Typescript](https://img.shields.io/badge/typescript-35495E?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
 [![Bun](https://img.shields.io/badge/bun-35495E?style=for-the-badge&logo=bun)](https://bun.sh)
-[![Fastify](https://img.shields.io/badge/Fastify-000000?style=for-the-badge&logo=fastify)](https://fastify.dev)
+[![Fastify](https://img.shields.io/badge/Fastify-35495E?style=for-the-badge&logo=fastify)](https://fastify.dev)
 
 ## Contributing
 
