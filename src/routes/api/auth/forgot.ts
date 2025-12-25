@@ -35,7 +35,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const locale = request.headers["accept-language"]?.split(",")[0] || "en-US";
       const proto = (request.headers["x-forwarded-proto"] as string) ?? "http";
       const host = request.headers.host ?? "localhost:3000";
-      const verifyUrl = `${proto}://${host}/verify#token=${encodeURIComponent(emailToken)}`;
+      const verifyUrl = `${proto}://${host}/reset#token=${encodeURIComponent(emailToken)}`;
 
       if (locale.startsWith("ko")) {
         await fastify.mailer.sendMail({
