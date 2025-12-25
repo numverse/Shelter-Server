@@ -24,6 +24,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Create a new user account with email, password, and username",
       security: [],
     },
+    preHandler: fastify.rateLimit({
+      max: 5,
+      timeWindow: 60 * 1000, // 1 minute
+    }),
     handler: async (request, reply) => {
       const { email, password, username } = request.body;
 

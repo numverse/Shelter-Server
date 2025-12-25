@@ -4,6 +4,10 @@
 // Server
 export const PORT = parseInt(process.env.PORT || "3000", 10);
 export const NODE_ENV = process.env.NODE_ENV || "development";
+export const RATE_LIMIT_MAX = parseInt(
+  process.env.RATE_LIMIT_MAX || "100",
+  10,
+);
 
 // MongoDB
 export const MONGODB_URI

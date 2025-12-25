@@ -20,6 +20,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Send the password reset email to the user with the specified email address",
       security: [],
     },
+    preHandler: fastify.rateLimit({
+      max: 5,
+      timeWindow: 60 * 1000, // 1 minute
+    }),
     handler: async (request, reply) => {
       const user = await userRepo.findUserByEmail(request.body.email);
 
