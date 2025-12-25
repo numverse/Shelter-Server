@@ -60,6 +60,19 @@ export async function createUser(data: {
   return toApiResponse(doc) as IUser;
 }
 
+export async function updateUserPassword(id: string, hashedPassword: string): Promise<boolean> {
+  const result = await UserModel.updateOne(
+    { _id: id },
+    {
+      $set: {
+        password: hashedPassword,
+        updatedAt: new Date(),
+      },
+    },
+  );
+  return result.modifiedCount > 0;
+}
+
 export async function updateUserProfile(id: string, data: {
   username?: string; displayName?: string; avatarId?: Types.ObjectId | null;
 }): Promise<IUser | null> {

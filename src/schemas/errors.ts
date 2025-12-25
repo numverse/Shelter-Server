@@ -12,6 +12,12 @@ export const INVALID_USER_TOKEN = {
   statusCode: 401,
 };
 
+export const PASSWORD_MISMATCH = {
+  code: "PASSWORD_MISMATCH",
+  message: "The provided passwords do not match.",
+  error: "Bad Request",
+  statusCode: 400,
+};
 export const INVALID_EMAIL_PASSWORD = {
   code: "INVALID_EMAIL_PASSWORD",
   message: "The provided email or password is incorrect.",
@@ -48,9 +54,9 @@ export const USERNAME_TAKEN = {
   error: "Bad Request",
   statusCode: 400,
 };
-export const INVALID_OR_EXPIRED_VERIFICATION_CODE = {
-  code: "INVALID_OR_EXPIRED_VERIFICATION_CODE",
-  message: "The provided verification code is invalid or has expired.",
+export const INVALID_OR_EXPIRED_VERIFICATION_TOKEN = {
+  code: "INVALID_OR_EXPIRED_VERIFICATION_TOKEN",
+  message: "The provided verification token is invalid or has expired.",
   error: "Bad Request",
   statusCode: 400,
 };

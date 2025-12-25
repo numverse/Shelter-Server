@@ -38,7 +38,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         await fastify.mailer.sendMail({
           from: "\"Shelter\" <noreply@shelter.zero624.dev>",
           to: request.user.email,
-          subject: "쉘터 이메일 인증",
+          subject: "Shelter 이메일 인증",
           html: `<p>쉘터에 오신 것을 환영합니다!</p>
                  <p>다음 코드를 사용하여 이메일을 인증하세요:</p>
                  <p><a href="${verifyUrl}" style="display:inline-block;padding:10px 14px;background:#2563eb;color:#fff;border-radius:6px;text-decoration:none">이메일 인증하기</a></p>`,

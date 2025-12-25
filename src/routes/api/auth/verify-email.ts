@@ -1,7 +1,7 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "src/database/repository/userRepo";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { INVALID_OR_EXPIRED_VERIFICATION_CODE, USER_NOT_FOUND, USER_UPDATE_FAILED } from "src/schemas/errors";
+import { INVALID_OR_EXPIRED_VERIFICATION_TOKEN, USER_NOT_FOUND, USER_UPDATE_FAILED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -25,7 +25,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const payload = fastify.tokenManager.verifyToken("email", token);
       if (!payload) {
-        return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_CODE);
+        return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
       }
 
       const user = await userRepo.findUserById(payload.userId);
@@ -34,7 +34,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       if (user.email !== payload.email) {
-        return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_CODE);
+        return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
       }
 
       const query: {
