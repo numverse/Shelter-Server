@@ -4,7 +4,7 @@ import { RATE_LIMIT_MAX } from "../../config.js";
 
 export const autoConfig = (_fastify: FastifyInstance) => {
   return {
-    hooks: "onPreHandler",
+    // hooks: "onPreHandler",
     max: RATE_LIMIT_MAX,
     timeWindow: 60 * 1000, // 1 minute
   };

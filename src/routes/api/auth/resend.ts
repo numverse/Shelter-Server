@@ -15,10 +15,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       summary: "Resend verification email",
       description: "Resend the email verification code to the authenticated user",
     },
-    preHandler: fastify.rateLimit({
-      max: 5,
-      timeWindow: 60 * 1000, // 1 minute
-    }),
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: 60 * 1000, // 1 minute
+      },
+    },
     handler: async (request, reply) => {
       if (!request.user) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
