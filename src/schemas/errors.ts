@@ -236,3 +236,9 @@ export const PERMISSION_DENIED = {
   error: "Forbidden",
   statusCode: 403,
 };
+export const DB_OPERATION_FAILED = {
+  code: "DB_OPERATION_FAILED",
+  message: "A database operation failed.",
+  error: "Internal Server Error",
+  statusCode: 500,
+};

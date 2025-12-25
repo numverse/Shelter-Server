@@ -2,7 +2,8 @@
 import { IUser } from "src/database/models/userModel";
 import * as userRepo from "src/database/repository/userRepo";
 import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../config";
-import { INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN } from "src/schemas/errors";
+import { AUTHENTICATION_REQUIRED, DB_OPERATION_FAILED, INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN, NO_REFRESH_TOKEN } from "src/schemas/errors";
+import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 declare module "fastify" {
   export interface FastifyRequest {
@@ -10,54 +11,68 @@ declare module "fastify" {
   }
 }
 
+async function authenticate(fastify: FastifyInstance, request: FastifyRequest, reply: FastifyReply) {
+  let token: string | undefined;
+  if (request.cookies?.at) {
+    token = request.cookies.at;
+  } else {
+    const authHeader = request.headers.authorization;
+    if (authHeader?.startsWith("Bearer ")) {
+      token = authHeader.substring(7);
+    }
+  }
+  if (!token) return reply.status(401).send(AUTHENTICATION_REQUIRED);
+
+  const payload = fastify.tokenManager.verifyToken("access", token);
+  if (payload) {
+    const user = await userRepo.findUserById(payload.userId);
+    if (!user) return reply.status(401).send(INVALID_USER_TOKEN);
+    return request.user = user;
+  }
+
+  const refreshToken = request.cookies?.rt;
+  if (!refreshToken) return reply.status(401).send(NO_REFRESH_TOKEN);
+
+  const refreshPayload = fastify.tokenManager.verifyToken("refresh", refreshToken);
+  if (refreshPayload) {
+    let user: IUser | null;
+    try {
+      user = await userRepo.findUserById(refreshPayload.userId);
+      if (!user || user.refreshToken !== refreshToken) {
+        return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
+      }
+      await userRepo.clearRefreshToken(user.id);
+    } catch {
+      return reply.status(500).send(DB_OPERATION_FAILED);
+    }
+
+    const tokens = await fastify.tokenManager.createTokens({
+      userId: user.id,
+      email: user.email,
+    });
+    reply
+      .setCookie("at", tokens.accessToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: ACCESS_TOKEN_MAX_AGE,
+      })
+      .setCookie("rt", tokens.refreshToken, {
+        ...COOKIE_OPTIONS,
+        maxAge: REFRESH_TOKEN_MAX_AGE,
+      });
+
+    request.user = user;
+  }
+}
+
 export default fp(
   async function (fastify) {
     fastify.decorateRequest("user", null);
-    fastify.addHook("preHandler", async (request, reply) => {
-      let token: string | undefined;
-      if (request.cookies?.at) {
-        token = request.cookies.at;
-      } else {
-        const authHeader = request.headers.authorization;
-        if (authHeader?.startsWith("Bearer ")) {
-          token = authHeader.substring(7);
-        }
-      }
-      if (!token) return;
-
-      const payload = fastify.tokenManager.verifyToken("access", token);
-      if (payload) {
-        const user = await userRepo.findUserById(payload.userId);
-        if (!user) return reply.status(401).send(INVALID_USER_TOKEN);
-        return request.user = user;
-      }
-
-      const refreshToken = request.cookies?.rt;
-      if (!refreshToken) return;
-
-      const refreshPayload = fastify.tokenManager.verifyToken("refresh", refreshToken);
-      if (refreshPayload) {
-        const user = await userRepo.findUserByRefreshToken(refreshToken);
-        if (!user || user.id !== refreshPayload.userId) {
-          return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
-        }
-        await userRepo.clearRefreshToken(user.id);
-
-        const tokens = await fastify.tokenManager.createTokens({
-          userId: user.id,
-          email: user.email,
-        });
-        reply
-          .setCookie("at", tokens.accessToken, {
-            ...COOKIE_OPTIONS,
-            maxAge: ACCESS_TOKEN_MAX_AGE,
-          })
-          .setCookie("rt", tokens.refreshToken, {
-            ...COOKIE_OPTIONS,
-            maxAge: REFRESH_TOKEN_MAX_AGE,
-          });
-
-        request.user = user;
+    fastify.addHook("onRoute", (routeOptions) => {
+      const security = routeOptions.schema?.security;
+      if (!security || security?.length) {
+        routeOptions.preHandler = async (request, reply) => {
+          await authenticate(fastify, request, reply);
+        };
       }
     });
   },
