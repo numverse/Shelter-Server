@@ -1,6 +1,5 @@
 ﻿// Snowflake ID Generator
 // 64-bit ID: timestamp (42 bits) | worker (5 bits) | process (5 bits) | sequence (12 bits)
-
 const EPOCH = 1700000000000n; // Custom epoch: Nov 14, 2023
 const WORKER_ID = BigInt(process.env.WORKER_ID || "1");
 const PROCESS_ID = BigInt(process.env.PROCESS_ID || "1");
