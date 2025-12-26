@@ -55,6 +55,7 @@ export async function createUser(data: {
     username: data.username,
     email: data.email,
     password: data.password,
+    displayName: data.displayName,
     emojiPacks: [],
   });
   return toApiResponse(doc) as IUser;
