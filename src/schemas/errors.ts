@@ -248,8 +248,8 @@ export const DB_OPERATION_FAILED = {
   error: "Internal Server Error",
   statusCode: 500,
 };
-export const TOO_MANY_REQUESTS = (sec: number) => ({
-  code: "TOO_MANY_REQUESTS",
+export const RATE_LIMIT_EXCEEDED = (sec: number) => ({
+  code: "RATE_LIMIT_EXCEEDED",
   message: `Rate limit exceeded, retry in ${sec} seconds`,
   error: "Too Many Requests",
   statusCode: 429,

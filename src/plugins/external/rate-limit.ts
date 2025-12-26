@@ -1,12 +1,12 @@
 import fastifyRateLimit, { type errorResponseBuilderContext } from "@fastify/rate-limit";
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { RATE_LIMIT_MAX } from "../../config.js";
-import { TOO_MANY_REQUESTS } from "../../schemas/errors";
+import { RATE_LIMIT_EXCEEDED } from "../../schemas/errors";
 
 export const autoConfig = (_fastify: FastifyInstance) => {
   return {
     errorResponseBuilder: (req: FastifyRequest, context: errorResponseBuilderContext) => {
-      return TOO_MANY_REQUESTS(Math.ceil(context.ttl / 1000));
+      return RATE_LIMIT_EXCEEDED(Math.ceil(context.ttl / 1000));
     },
     max: RATE_LIMIT_MAX,
     timeWindow: 60 * 1000, // 1 minute
