@@ -4,7 +4,6 @@ import { generateSnowflake } from "src/utils/snowflake";
 import { displayNameType, emailType, passwordType, usernameType } from "src/schemas/types";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { EMAIL_EXISTS, REGISTRATION_FAILED, TOKEN_GENERATION_FAILED, USERNAME_TAKEN } from "src/schemas/errors";
-import { REFRESH_TOKEN_MAX_AGE, ACCESS_TOKEN_MAX_AGE, COOKIE_OPTIONS } from "src/config";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/register", {
@@ -94,15 +93,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         });
       }
 
-      return reply
-        .setCookie("at", tokens.accessToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: ACCESS_TOKEN_MAX_AGE,
-        })
-        .setCookie("rt", tokens.refreshToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: REFRESH_TOKEN_MAX_AGE,
-        }).send({ success: true });
+      return reply.setTokenCookies(tokens.accessToken, tokens.refreshToken).send({ success: true });
     },
   });
 };

@@ -1,6 +1,5 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "../../../database/repository/userRepo";
-import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../../config";
 import { emailType, passwordType, snowflakeType } from "src/schemas/types";
 import { ErrorResponse } from "src/schemas/response";
 import { INVALID_EMAIL_PASSWORD, TOKEN_GENERATION_FAILED } from "src/schemas/errors";
@@ -37,24 +36,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(401).send(INVALID_EMAIL_PASSWORD);
       }
 
-      const { accessToken, refreshToken } = await fastify.tokenManager.createTokens({
+      const tokens = await fastify.tokenManager.createTokens({
         userId: user.id,
         email: user.email,
       });
-      if (!accessToken || !refreshToken) {
+      if (!tokens) {
         return reply.status(500).send(TOKEN_GENERATION_FAILED);
       }
 
-      return reply
-        .setCookie("at", accessToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: ACCESS_TOKEN_MAX_AGE,
-        })
-        .setCookie("rt", refreshToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: REFRESH_TOKEN_MAX_AGE,
-        })
-        .status(200).send({ userId: user.id });
+      return reply.setTokenCookies(tokens.accessToken, tokens.refreshToken).status(200).send({ userId: user.id });
     },
   });
 };

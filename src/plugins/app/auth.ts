@@ -9,6 +9,21 @@ declare module "fastify" {
   export interface FastifyRequest {
     user: IUser | null;
   }
+  export interface FastifyReply {
+    setTokenCookies: (accessToken: string, refreshToken: string) => FastifyReply;
+  }
+}
+
+function setTokenCookies(reply: FastifyReply, accessToken: string, refreshToken: string) {
+  return reply
+    .setCookie("at", accessToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: ACCESS_TOKEN_MAX_AGE,
+    })
+    .setCookie("rt", refreshToken, {
+      ...COOKIE_OPTIONS,
+      maxAge: REFRESH_TOKEN_MAX_AGE,
+    });
 }
 
 async function authenticate(fastify: FastifyInstance, request: FastifyRequest, reply: FastifyReply) {
@@ -49,15 +64,7 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
         userId: user.id,
         email: user.email,
       });
-      reply
-        .setCookie("at", tokens.accessToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: ACCESS_TOKEN_MAX_AGE,
-        })
-        .setCookie("rt", tokens.refreshToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: REFRESH_TOKEN_MAX_AGE,
-        });
+      reply.setTokenCookies(tokens.accessToken, tokens.refreshToken);
     } catch {
       return reply.status(500).send(DB_OPERATION_FAILED);
     }
@@ -69,6 +76,9 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
 export default fp(
   async function (fastify) {
     fastify.decorateRequest("user", null);
+    fastify.decorateReply("setTokenCookies", function (this: FastifyReply, accessToken: string, refreshToken: string) {
+      return setTokenCookies(this, accessToken, refreshToken);
+    });
     fastify.addHook("onRoute", (routeOptions) => {
       const security = routeOptions.schema?.security;
       if (!security || security?.length) {

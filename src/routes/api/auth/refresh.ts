@@ -1,6 +1,5 @@
 ﻿import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "../../../database/repository/userRepo";
-import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../../config";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { INVALID_OR_EXPIRED_REFRESH_TOKEN, NO_REFRESH_TOKEN, TOKEN_GENERATION_FAILED } from "src/schemas/errors";
 
@@ -49,16 +48,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(500).send(TOKEN_GENERATION_FAILED);
       }
 
-      return reply
-        .setCookie("at", tokens.accessToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: ACCESS_TOKEN_MAX_AGE,
-        })
-        .setCookie("rt", tokens.refreshToken, {
-          ...COOKIE_OPTIONS,
-          maxAge: REFRESH_TOKEN_MAX_AGE,
-        })
-        .send({ success: true });
+      return reply.setTokenCookies(tokens.accessToken, tokens.refreshToken).send({ success: true });
     },
   });
 };

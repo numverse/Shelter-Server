@@ -33,7 +33,7 @@ function generateToken(type: JWTPayload["type"], payload: JWTCreatePayload): str
   return jwt.sign({ ...payload, type: type }, JWT_SECRET, { expiresIn: typeExpirations[type] });
 }
 
-function verifyToken(type: JWTPayload["type"], token: string): { userId: string; email?: string } | null {
+function verifyToken(type: JWTPayload["type"], token: string): { userId: string; email: string } | null {
   try {
     const payload = jwt.verify(token, JWT_SECRET) as JWTPayload;
     if (payload.type !== type) return null;

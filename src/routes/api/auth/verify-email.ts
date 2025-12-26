@@ -37,25 +37,24 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
       }
 
-      const query: {
-        username?: string;
-        displayName?: string;
-        flags: UserFlags;
-      } = {
+      const accessToken = fastify.tokenManager.generateToken("access", {
+        userId: user.id,
+        email: user.email,
+      });
+      const refreshToken = fastify.tokenManager.generateToken("refresh", {
+        userId: user.id,
+        email: user.email,
+      });
+
+      const updatedUser = await userRepo.updateUser(payload.userId, {
         flags: UserFlags.MEMBER,
-      };
-
-      if (user.displayName && await userRepo.existsUserByUsername(user.displayName).then((r) => !r)) {
-        query["username"] = user.displayName;
-        query["displayName"] = undefined;
-      }
-
-      const updatedUser = await userRepo.updateUser(payload.userId, query);
+        refreshToken: refreshToken,
+      });
       if (!updatedUser) {
         return reply.status(500).send(USER_UPDATE_FAILED);
       }
 
-      return reply.send({ success: true });
+      return reply.setTokenCookies(accessToken, refreshToken).send({ success: true });
     },
   });
 };
