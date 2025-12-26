@@ -2,7 +2,7 @@
 import { IUser } from "src/database/models/userModel";
 import * as userRepo from "src/database/repository/userRepo";
 import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../config";
-import { AUTHENTICATION_REQUIRED, DB_OPERATION_FAILED, INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN, NO_REFRESH_TOKEN } from "src/schemas/errors";
+import { DB_OPERATION_FAILED, INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN, NO_REFRESH_TOKEN } from "src/schemas/errors";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 declare module "fastify" {
@@ -21,13 +21,14 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
       token = authHeader.substring(7);
     }
   }
-  if (!token) return reply.status(401).send(AUTHENTICATION_REQUIRED);
 
-  const payload = fastify.tokenManager.verifyToken("access", token);
-  if (payload) {
-    const user = await userRepo.findUserById(payload.userId);
-    if (!user) return reply.status(401).send(INVALID_USER_TOKEN);
-    return request.user = user;
+  if (token) {
+    const payload = fastify.tokenManager.verifyToken("access", token);
+    if (payload) {
+      const user = await userRepo.findUserById(payload.userId);
+      if (!user) return reply.status(401).send(INVALID_USER_TOKEN);
+      return request.user = user;
+    }
   }
 
   const refreshToken = request.cookies?.rt;
@@ -38,27 +39,28 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
     let user: IUser | null;
     try {
       user = await userRepo.findUserById(refreshPayload.userId);
+      if (!user) return console.log("no user");
       if (!user || user.refreshToken !== refreshToken) {
         return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
       }
       await userRepo.clearRefreshToken(user.id);
+
+      const tokens = await fastify.tokenManager.createTokens({
+        userId: user.id,
+        email: user.email,
+      });
+      reply
+        .setCookie("at", tokens.accessToken, {
+          ...COOKIE_OPTIONS,
+          maxAge: ACCESS_TOKEN_MAX_AGE,
+        })
+        .setCookie("rt", tokens.refreshToken, {
+          ...COOKIE_OPTIONS,
+          maxAge: REFRESH_TOKEN_MAX_AGE,
+        });
     } catch {
       return reply.status(500).send(DB_OPERATION_FAILED);
     }
-
-    const tokens = await fastify.tokenManager.createTokens({
-      userId: user.id,
-      email: user.email,
-    });
-    reply
-      .setCookie("at", tokens.accessToken, {
-        ...COOKIE_OPTIONS,
-        maxAge: ACCESS_TOKEN_MAX_AGE,
-      })
-      .setCookie("rt", tokens.refreshToken, {
-        ...COOKIE_OPTIONS,
-        maxAge: REFRESH_TOKEN_MAX_AGE,
-      });
 
     request.user = user;
   }
@@ -70,8 +72,9 @@ export default fp(
     fastify.addHook("onRoute", (routeOptions) => {
       const security = routeOptions.schema?.security;
       if (!security || security?.length) {
-        routeOptions.preHandler = async (request, reply) => {
+        routeOptions.preHandler = async (request, reply, done) => {
           await authenticate(fastify, request, reply);
+          done();
         };
       }
     });
