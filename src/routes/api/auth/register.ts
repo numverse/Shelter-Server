@@ -1,7 +1,7 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "src/database/repository/userRepo";
 import { generateSnowflake } from "src/utils/snowflake";
-import { emailType, passwordType, usernameType } from "src/schemas/types";
+import { displayNameType, emailType, passwordType, usernameType } from "src/schemas/types";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { EMAIL_EXISTS, REGISTRATION_FAILED, TOKEN_GENERATION_FAILED, USERNAME_TAKEN } from "src/schemas/errors";
 import { REFRESH_TOKEN_MAX_AGE, ACCESS_TOKEN_MAX_AGE, COOKIE_OPTIONS } from "src/config";
@@ -13,6 +13,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         email: emailType,
         password: passwordType,
         username: usernameType,
+        displayName: Type.Optional(displayNameType),
       }),
       response: {
         201: SuccessResponse,
@@ -31,7 +32,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     handler: async (request, reply) => {
-      const { email, password, username } = request.body;
+      const { email, password, username, displayName } = request.body;
 
       if (/^user_\d+$/.test(username)) {
         return reply.status(400).send(USERNAME_TAKEN);
@@ -51,10 +52,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const user = await userRepo.createUser({
         id: userId,
-        email,
+        email: email,
         password: hashedPassword,
-        username: `user_${userId}`,
-        displayName: username,
+        username: username,
+        displayName: displayName,
       });
       if (!user) {
         return reply.status(500).send(REGISTRATION_FAILED);

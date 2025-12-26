@@ -43,6 +43,11 @@ export async function findUsersByIds(ids: string[]): Promise<IUser[]> {
   return toApiResponseArray(docs);
 }
 
+export async function findUsersByUsernames(usernames: string[]): Promise<IUser[]> {
+  const docs = await UserModel.find({ username: { $in: usernames } }).lean<IUserDoc[]>();
+  return toApiResponseArray(docs);
+}
+
 export async function createUser(data: {
   id: string;
   username: string;
