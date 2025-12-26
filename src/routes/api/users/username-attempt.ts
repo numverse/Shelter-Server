@@ -15,6 +15,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       tags: ["Users"],
       summary: "List all users",
       description: "Retrieve a list of all users",
+      security: [],
     },
     handler: async (request, reply) => {
       const taken = await userRepo.existsUserByUsername(request.body.username);
