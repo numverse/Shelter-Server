@@ -29,7 +29,8 @@ export const passwordType = Type.String({
 export const usernameType = Type.String({
   minLength: 2,
   maxLength: 32,
-  description: "A username between 2 and 32 characters",
+  description: "A username between 2 and 32 characters, containing only letters, numbers, underscores, dots, and commas",
+  pattern: "^[A-Za-z0-9_.,]+$",
 });
 
 export const dateStringType = Type.String({
