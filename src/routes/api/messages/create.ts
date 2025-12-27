@@ -13,7 +13,7 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
     schema: {
-      consumes: ["multipart/form-data"],
+      consumes: ["multipart/form-data", "application/json"],
       contentType: "multipart/form-data",
       body: Type.Object({
         channelId: snowflakeType,
@@ -102,29 +102,29 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           updatedAt: message.updatedAt?.toISOString(),
           createdAt: message.createdAt.toISOString(),
         });
+      } else {
+        const { channelId, content, replyTo } = request.body;
+
+        if (!channelId || !content) {
+          return reply.status(400).send(MISSING_REQUIRED_FIELDS);
+        }
+
+        const message = await messageRepo.createMessage({
+          id: generateSnowflake(),
+          channelId,
+          content,
+          authorId: request.user.id,
+          replyTo,
+        });
+
+        // Broadcast to all WebSocket clients
+        fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
+        return reply.status(201).send({
+          ...message,
+          updatedAt: message.updatedAt?.toISOString(),
+          createdAt: message.createdAt.toISOString(),
+        });
       }
-
-      const { channelId, content, replyTo } = request.body;
-
-      if (!channelId || !content) {
-        return reply.status(400).send(MISSING_REQUIRED_FIELDS);
-      }
-
-      const message = await messageRepo.createMessage({
-        id: generateSnowflake(),
-        channelId,
-        content,
-        authorId: request.user.id,
-        replyTo,
-      });
-
-      // Broadcast to all WebSocket clients
-      fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
-      return reply.status(201).send({
-        ...message,
-        updatedAt: message.updatedAt?.toISOString(),
-        createdAt: message.createdAt.toISOString(),
-      });
     },
   });
 };
