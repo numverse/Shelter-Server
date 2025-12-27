@@ -14,7 +14,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
     schema: {
       consumes: ["multipart/form-data", "application/json"],
-      contentType: "multipart/form-data",
       body: Type.Object({
         channelId: snowflakeType,
         content: messageContentType,
@@ -36,9 +35,30 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const contentType = request.headers["content-type"] || "";
+      console.log(contentType, request.body);
 
-      // Handle multipart/form-data for file uploads
-      if (contentType.includes("multipart/form-data")) {
+      if (contentType === "application/json") {
+        const { channelId, content, replyTo } = request.body;
+
+        if (!channelId || !content) {
+          return reply.status(400).send(MISSING_REQUIRED_FIELDS);
+        }
+
+        const message = await messageRepo.createMessage({
+          id: generateSnowflake(),
+          channelId,
+          content,
+          authorId: request.user.id,
+          replyTo,
+        });
+
+        // fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
+        return reply.status(201).send({
+          ...message,
+          updatedAt: message.updatedAt?.toISOString(),
+          createdAt: message.createdAt.toISOString(),
+        });
+      } else {
         const fields: Record<string, string> = {};
         const attachments: IAttachment[] = [];
 
@@ -96,29 +116,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           attachments,
         });
 
-        fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
-        return reply.status(201).send({
-          ...message,
-          updatedAt: message.updatedAt?.toISOString(),
-          createdAt: message.createdAt.toISOString(),
-        });
-      } else {
-        const { channelId, content, replyTo } = request.body;
-
-        if (!channelId || !content) {
-          return reply.status(400).send(MISSING_REQUIRED_FIELDS);
-        }
-
-        const message = await messageRepo.createMessage({
-          id: generateSnowflake(),
-          channelId,
-          content,
-          authorId: request.user.id,
-          replyTo,
-        });
-
-        // Broadcast to all WebSocket clients
-        fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
+        // fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
         return reply.status(201).send({
           ...message,
           updatedAt: message.updatedAt?.toISOString(),

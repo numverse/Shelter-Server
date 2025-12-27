@@ -81,7 +81,6 @@ export async function createMessage(data: {
     content: data.content,
     replyTo: data.replyTo,
     attachments: data.attachments || [],
-    reactions: [],
   });
   return toApiResponse(doc) as IMessage;
 }

@@ -59,7 +59,8 @@ export const MessageResponse = Type.Object({
   authorId: parts.snowflakeType,
   content: Type.String(),
   replyTo: Type.Optional(parts.snowflakeType),
-  attachments: Type.Array(Type.Omit(FileMetadataResponse, ["createdAt", "uploaderId"])),
+  attachments: Type.Optional(Type.Array(Type.Omit(FileMetadataResponse, ["createdAt", "uploaderId"]))),
+  // reactions: Type.Optional(),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
 });
