@@ -18,13 +18,13 @@ export interface PresenceUpdatePayload {
 export type WSMessage
   = | { type: "MESSAGE_CREATE"; payload: IMessage }
     | { type: "MESSAGE_UPDATE"; payload: IMessage }
-    | { type: "MESSAGE_DELETE"; payload: string } // messageId
+    | { type: "MESSAGE_DELETE"; payload: { channelId: string; messageId: string } }
     | { type: "REACTION_ADD"; payload: ReactionPayload }
     | { type: "REACTION_REMOVE"; payload: ReactionPayload }
     | { type: "PRESENCE_UPDATE"; payload: PresenceUpdatePayload }
     | { type: "CHANNEL_CREATE"; payload: IChannel }
     | { type: "CHANNEL_UPDATE"; payload: IChannel }
-    | { type: "CHANNEL_DELETE"; payload: string }; // channelId
+    | { type: "CHANNEL_DELETE"; payload: { channelId: string } };
 
 export enum GatewayOpCode {
   DISPATCH = 0,

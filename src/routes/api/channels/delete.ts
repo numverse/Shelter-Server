@@ -38,7 +38,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       fastify.broadcast({
         type: "CHANNEL_DELETE",
-        payload: id,
+        payload: {
+          channelId: id,
+        },
       });
 
       return reply.status(204).send();

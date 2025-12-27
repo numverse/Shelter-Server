@@ -45,7 +45,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       // Broadcast to all WebSocket clients
-      fastify.broadcast({ type: "MESSAGE_DELETE", payload: messageId });
+      fastify.broadcast({ type: "MESSAGE_DELETE", payload: {
+        channelId: message.channelId,
+        messageId: message.id,
+      } });
       return reply.status(204).send();
     },
   });
