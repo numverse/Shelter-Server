@@ -5,7 +5,7 @@ import { INVALID_RESOURCE } from "src/schemas/errors";
 import { fileType } from "src/schemas/types";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.get("/avatar/:userId/:avatar", {
+  fastify.get("/avatars/:userId/:avatar", {
     schema: {
       params: Type.Object({
         userId: Type.String(),
