@@ -52,7 +52,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           replyTo,
         });
 
-        // fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
+        fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
         return reply.status(201).send({
           ...message,
           updatedAt: message.updatedAt?.toISOString(),
@@ -116,7 +116,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           attachments,
         });
 
-        // fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
+        fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });
         return reply.status(201).send({
           ...message,
           updatedAt: message.updatedAt?.toISOString(),
