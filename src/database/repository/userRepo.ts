@@ -204,13 +204,6 @@ export async function saveRefreshToken(userId: string, refreshToken: string): Pr
   );
 }
 
-export async function findUserByRefreshToken(refreshToken: string): Promise<IUser | null> {
-  const doc = await UserModel.findOne({
-    refreshToken,
-  }).lean<IUserDoc>();
-  return toApiResponse(doc);
-}
-
 export async function clearRefreshToken(userId: string): Promise<void> {
   await UserModel.updateOne(
     { _id: userId },

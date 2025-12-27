@@ -18,21 +18,18 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       security: [],
     },
     handler: async (request, reply) => {
-      // Read refresh token from cookie
       const refreshToken = request.cookies?.rt;
       if (!refreshToken) {
         return reply.status(400).send(NO_REFRESH_TOKEN);
       }
 
-      // Verify JWT refresh token
       const payload = fastify.tokenManager.verifyToken("refresh", refreshToken);
       if (!payload) {
         return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
       }
 
-      // Find user and verify token is stored in DB (single-use check)
-      const user = await userRepo.findUserByRefreshToken(refreshToken);
-      if (!user || user.id !== payload.userId) {
+      const user = await userRepo.findUserById(payload.userId);
+      if (!user || user.refreshToken !== refreshToken) {
         return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
       }
 
