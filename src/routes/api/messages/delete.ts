@@ -35,7 +35,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(404).send(MESSAGE_NOT_FOUND);
       }
       if (message.authorId !== request.user.id
-        || !fastify.bitFieldManager.hasEitherFlag(request.user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
+        && !fastify.bitFieldManager.hasEitherFlag(request.user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 
