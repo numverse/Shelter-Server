@@ -3,6 +3,7 @@ import { PORT } from "./config";
 import fastifyAutoload from "@fastify/autoload";
 import path from "path";
 import "./database";
+import { redis } from "bun";
 
 const fastify = Fastify({
   logger: false,
@@ -69,6 +70,10 @@ declare module "fastify" {
   await fastify.listen({
     port: PORT,
     host: "0.0.0.0",
+  });
+
+  redis.connect().catch((err) => {
+    log(`Redis connection error: ${err.message}`, "redis");
   });
 
   // Print all registered routes
