@@ -43,12 +43,16 @@ function verifyToken(type: JWTPayload["type"], token: string): { userId: string;
   }
 }
 
-async function createTokens(payload: JWTCreatePayload & { deviceId: string }): Promise<{ accessToken: string; refreshToken: string }> {
+async function createTokens(payload: JWTCreatePayload & { deviceId: string; userAgent: string; ipAddress: string }): Promise<{ accessToken: string; refreshToken: string }> {
   const accessToken = generateToken("access", payload);
   const refreshToken = generateToken("refresh", payload);
 
   // Save refresh token to database (JWT handles expiration)
-  await userRepo.setRefreshToken(payload.userId, payload.deviceId, refreshToken);
+  await userRepo.setRefreshToken(payload.userId, payload.deviceId, {
+    refreshToken: refreshToken,
+    userAgent: payload.userAgent,
+    ipAddress: payload.ipAddress,
+  });
 
   return { accessToken, refreshToken };
 }

@@ -41,6 +41,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const tokens = await fastify.tokenManager.createTokens({
         deviceId: deviceId,
+        userAgent: request.headers["user-agent"] || "unknown",
+        ipAddress: request.ip,
         userId: user.id,
         email: user.email,
       });
