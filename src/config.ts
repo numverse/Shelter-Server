@@ -13,9 +13,9 @@ export const RATE_LIMIT_MAX = parseInt(
 );
 
 // MongoDB
-export const MONGODB_URI
-  = process.env.MONGODB_URI || "mongodb://localhost:27017";
-export const DB_NAME = process.env.DB_NAME || "shelter";
+export const MONGODB_URI = `mongodb://${encodeURIComponent(process.env.MONGO_USER || "")}:${
+  encodeURIComponent(process.env.MONGO_PASS || "")}@${process.env.MONGO_HOST}:${
+  process.env.MONGO_PORT}/${process.env.MONGO_NAME}?authSource=admin`;
 
 // Node mailer (SMTP)
 export const SMTP_HOST = process.env.SMTP_HOST;

@@ -1,6 +1,5 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "src/database/repository/userRepo";
-import { setRefreshToken } from "src/database/redis/userRepo";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { INVALID_OR_EXPIRED_VERIFICATION_TOKEN, TOKEN_GENERATION_FAILED, USER_NOT_FOUND, USER_UPDATE_FAILED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
@@ -34,7 +33,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       if (!user) {
         return reply.status(400).send(USER_NOT_FOUND);
       }
-
       if (user.email !== payload.email) {
         return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
       }
@@ -43,8 +41,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         deviceId: deviceId,
         userAgent: request.headers["user-agent"] || "unknown",
         ipAddress: request.ip,
-        userId: user.id,
-        email: user.email,
+        userId: payload.userId,
+        email: payload.email,
       });
       if (!tokens) {
         return reply.status(500).send(TOKEN_GENERATION_FAILED);

@@ -11,8 +11,6 @@ const wsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     websocket: true,
   }, async (socket, request) => {
-    console.log("WebSocket client connected");
-
     const token = request.cookies?.at;
 
     if (!token) {
@@ -55,7 +53,6 @@ const wsRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     socket.on("close", () => {
-      console.log("WebSocket client disconnected");
       fastify.clientManager.removeClient(socket);
       fastify.broadcast({ type: "PRESENCE_UPDATE", payload: { userId: user.id, status: "offline" } });
     });
