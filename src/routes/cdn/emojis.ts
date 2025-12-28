@@ -10,6 +10,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       tags: ["CDN"],
       summary: "Get emoji image",
       description: "Get an emoji image by emoji ID",
+      security: [],
     },
     handler: async (request, reply) => {
       const { emojiId } = request.params;

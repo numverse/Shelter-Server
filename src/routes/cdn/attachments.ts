@@ -11,6 +11,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       tags: ["CDN"],
       summary: "Download file (inline)",
       description: "Get file content for inline viewing",
+      security: [],
     },
     handler: async (request, reply) => {
       const { id } = request.params;

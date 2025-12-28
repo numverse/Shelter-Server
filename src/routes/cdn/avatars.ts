@@ -18,6 +18,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       tags: ["CDN"],
       summary: "Get user avatar",
       description: "Get a user's avatar image by user ID",
+      security: [],
     },
     handler: async (request, reply) => {
       const { userId, avatar } = request.params;
