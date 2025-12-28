@@ -26,20 +26,20 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
-      const { username, displayName } = request.body;
+      const { username } = request.body;
 
-      if (!username && !displayName) {
+      if (!username && !("displayName" in request.body)) {
         return reply.status(400).send(MISSING_REQUIRED_FIELDS);
       }
 
       if (username) {
-        const existingUser = await userRepo.findUserByUsername(username);
-        if (existingUser && existingUser.id !== request.userId) {
+        const exists = await userRepo.existsUserByUsername(username);
+        if (exists) {
           return reply.status(400).send(USERNAME_TAKEN);
         }
       }
 
-      const updatedUser = await userRepo.updateUserProfile(request.userId, { username, displayName });
+      const updatedUser = await userRepo.updateUserProfile(request.userId, request.body);
       if (!updatedUser) {
         return reply.status(500).send(USER_UPDATE_FAILED);
       }
