@@ -22,7 +22,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Update the current user's profile information",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -34,26 +34,26 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       if (username) {
         const existingUser = await userRepo.findUserByUsername(username);
-        if (existingUser && existingUser.id !== request.user.id) {
+        if (existingUser && existingUser.id !== request.userId) {
           return reply.status(400).send(USERNAME_TAKEN);
         }
       }
 
-      const updatedUser = await userRepo.updateUserProfile(request.user.id, { username, displayName });
+      const updatedUser = await userRepo.updateUserProfile(request.userId, { username, displayName });
       if (!updatedUser) {
         return reply.status(500).send(USER_UPDATE_FAILED);
       }
 
       return reply.send({
-        id: request.user.id,
-        username: request.user.username,
-        displayName: request.user.displayName,
-        email: request.user.email,
-        flags: request.user.flags,
-        emojiPacks: request.user.emojiPacks,
-        avatarId: request.user.avatarId?.toString(),
-        createdAt: request.user.createdAt.toISOString(),
-        updatedAt: request.user.updatedAt?.toISOString(),
+        id: updatedUser.id,
+        username: updatedUser.username,
+        displayName: updatedUser.displayName,
+        email: updatedUser.email,
+        flags: updatedUser.flags,
+        emojiPacks: updatedUser.emojiPacks,
+        avatarId: updatedUser.avatarId?.toString(),
+        createdAt: updatedUser.createdAt.toISOString(),
+        updatedAt: updatedUser.updatedAt?.toISOString(),
       });
     },
   });

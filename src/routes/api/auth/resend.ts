@@ -1,7 +1,9 @@
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { AUTHENTICATION_REQUIRED, PERMISSION_DENIED } from "src/schemas/errors";
+import { PROTOCOL, DOMAIN } from "../../../config";
 import { UserFlags } from "src/database/models/userModel";
+import * as userRepo from "src/database/repository/userRepo";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/resend", {
@@ -22,28 +24,27 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       },
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
-      if (!fastify.bitFieldManager.match(request.user.flags, UserFlags.NONE)) {
+      if (!fastify.bitFieldManager.match(user.flags, UserFlags.NONE)) {
         return reply.status(401).send(PERMISSION_DENIED);
       }
 
       const emailToken = fastify.tokenManager.generateToken("email", {
-        userId: request.user.id,
-        email: request.user.email,
+        userId: user.id,
+        email: user.email,
       });
 
       const locale = request.headers["accept-language"]?.split(",")[0] || "en-US";
-      const proto = (request.headers["x-forwarded-proto"] as string) ?? "http";
-      const host = request.headers.host ?? "localhost:3000";
-      const verifyUrl = `${proto}://${host}/verify#token=${encodeURIComponent(emailToken)}`;
+      const verifyUrl = `${PROTOCOL}://${DOMAIN}/verify#token=${encodeURIComponent(emailToken)}`;
 
       if (locale.startsWith("ko")) {
         await fastify.mailer.sendMail({
           from: "\"Shelter\" <noreply@shelter.zero624.dev>",
-          to: request.user.email,
+          to: user.email,
           subject: "Shelter 이메일 인증",
           html: `<p>쉘터에 오신 것을 환영합니다!</p>
                  <p>다음 코드를 사용하여 이메일을 인증하세요:</p>
@@ -52,7 +53,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       } else {
         await fastify.mailer.sendMail({
           from: "\"Shelter\" <noreply@shelter.zero624.dev>",
-          to: request.user.email,
+          to: user.email,
           subject: "Verify Email Address for Shelter",
           html: `<p>Welcome to Shelter!</p>
                  <p>Please verify your email by using the following code:</p>

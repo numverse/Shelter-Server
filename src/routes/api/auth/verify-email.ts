@@ -1,7 +1,8 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "src/database/repository/userRepo";
+import { setRefreshToken } from "src/database/redis/userRepo";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { INVALID_OR_EXPIRED_VERIFICATION_TOKEN, USER_NOT_FOUND, USER_UPDATE_FAILED } from "src/schemas/errors";
+import { INVALID_OR_EXPIRED_VERIFICATION_TOKEN, TOKEN_GENERATION_FAILED, USER_NOT_FOUND, USER_UPDATE_FAILED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -22,6 +23,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       const { token } = request.body;
+      const deviceId = request.headers["x-device-id"] as string;
 
       const payload = fastify.tokenManager.verifyToken("email", token);
       if (!payload) {
@@ -37,24 +39,23 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
       }
 
-      const accessToken = fastify.tokenManager.generateToken("access", {
+      const tokens = await fastify.tokenManager.createTokens({
+        deviceId: deviceId,
         userId: user.id,
         email: user.email,
       });
-      const refreshToken = fastify.tokenManager.generateToken("refresh", {
-        userId: user.id,
-        email: user.email,
-      });
+      if (!tokens) {
+        return reply.status(500).send(TOKEN_GENERATION_FAILED);
+      }
 
       const updatedUser = await userRepo.updateUser(payload.userId, {
         flags: UserFlags.MEMBER,
-        refreshToken: refreshToken,
       });
       if (!updatedUser) {
         return reply.status(500).send(USER_UPDATE_FAILED);
       }
 
-      return reply.setTokenCookies(accessToken, refreshToken).send({ success: true });
+      return reply.setTokenCookies(tokens.accessToken, tokens.refreshToken).send({ success: true });
     },
   });
 };

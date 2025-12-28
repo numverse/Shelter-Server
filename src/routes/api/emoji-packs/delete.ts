@@ -1,5 +1,6 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as emojiPackRepo from "../../../database/repository/emojiPackRepo";
+import * as userRepo from "../../../database/repository/userRepo";
 import { ErrorResponse } from "src/schemas/response";
 import { snowflakeType } from "src/schemas/types";
 import { AUTHENTICATION_REQUIRED, EMOJI_PACK_DELETE_FAILED, EMOJI_PACK_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
@@ -23,7 +24,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Delete an emoji pack by ID",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -34,8 +36,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       // Check permission: creator only
-      if (pack.creatorId !== request.user.id
-        || fastify.bitFieldManager.hasEitherFlag(request.user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)
+      if (pack.creatorId !== user.id
+        || fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)
       ) {
         return reply.status(403).send(PERMISSION_DENIED);
       }

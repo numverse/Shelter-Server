@@ -2,6 +2,9 @@
 // Set these environment variables or modify defaults for your environment
 
 // Server
+export const PROTOCOL = process.env.PROTOCOL || "http";
+export const DOMAIN = process.env.DOMAIN || "localhost:3000";
+
 export const PORT = parseInt(process.env.PORT || "3000", 10);
 export const NODE_ENV = process.env.NODE_ENV || "development";
 export const RATE_LIMIT_MAX = parseInt(

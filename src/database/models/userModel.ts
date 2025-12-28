@@ -8,7 +8,6 @@ export interface IUser {
   password: string;
   flags: number;
   avatarId?: Types.ObjectId;
-  refreshToken?: string;
   emojiPacks: string[];
   createdAt: Date;
   updatedAt?: Date;
@@ -35,7 +34,6 @@ const UserSchema: Schema = new Schema(
     password: { type: String, required: true },
     flags: { type: Number, required: true, default: UserFlags.NONE },
     avatarId: { type: Types.ObjectId, default: null },
-    refreshToken: { type: String, default: null },
     emojiPacks: { type: [String], default: [] },
     createdAt: { type: Date, required: true, default: Date.now },
     updatedAt: { type: Date, default: null },

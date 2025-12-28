@@ -41,15 +41,16 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         }
         return reply.send({ success: true });
       } else if ("oldPassword" in request.body) {
-        if (!request.user) {
+        const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+        if (!user) {
           return reply.status(401).send(AUTHENTICATION_REQUIRED);
         }
-        const isMatch = await fastify.passwordManager.compare(request.body.oldPassword, request.user.password);
+        const isMatch = await fastify.passwordManager.compare(request.body.oldPassword, user.password);
         if (!isMatch) {
           return reply.status(400).send(PASSWORD_MISMATCH);
         }
         const hashedPassword = await fastify.passwordManager.hash(request.body.newPassword);
-        const success = await userRepo.updateUserPassword(request.user.id, hashedPassword);
+        const success = await userRepo.updateUserPassword(user.id, hashedPassword);
         if (!success) {
           return reply.status(500).send(USER_UPDATE_FAILED);
         }

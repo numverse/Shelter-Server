@@ -1,6 +1,7 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as channelRepo from "../../../database/repository/channelRepo";
 import * as messageRepo from "../../../database/repository/messageRepo";
+import * as userRepo from "../../../database/repository/userRepo";
 import { ErrorResponse } from "../../../schemas/response";
 import { snowflakeType } from "src/schemas/types";
 import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
@@ -20,10 +21,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Delete a channel by ID",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(403).send(AUTHENTICATION_REQUIRED);
       }
-      if (!fastify.bitFieldManager.hasEitherFlag(request.user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
+      if (!fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 

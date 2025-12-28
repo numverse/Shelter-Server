@@ -34,7 +34,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Update an existing emoji pack",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -45,7 +45,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       // Check permission: creator only
-      if (pack.creatorId !== request.user.id) {
+      if (pack.creatorId !== request.userId) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 

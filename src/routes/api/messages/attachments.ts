@@ -23,7 +23,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Delete a file by ID",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -34,7 +34,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(404).send(MESSAGE_NOT_FOUND);
       }
 
-      if (message.authorId !== request.user.id) {
+      if (message.authorId !== request.userId) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 

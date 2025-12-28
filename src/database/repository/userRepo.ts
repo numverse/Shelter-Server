@@ -195,18 +195,3 @@ export async function removeUserEmojiPack(userId: string, packId: string): Promi
 export function deleteUser(id: string): Promise<boolean> {
   return UserModel.deleteOne({ _id: id }).then((result) => result.deletedCount > 0);
 }
-
-// Refresh token functions
-export async function saveRefreshToken(userId: string, refreshToken: string): Promise<void> {
-  await UserModel.updateOne(
-    { _id: userId },
-    { $set: { refreshToken } },
-  );
-}
-
-export async function clearRefreshToken(userId: string): Promise<void> {
-  await UserModel.updateOne(
-    { _id: userId },
-    { $set: { refreshToken: null } },
-  );
-}

@@ -22,13 +22,13 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Add an emoji reaction to a message",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
       const { messageId, emojiId } = request.params;
 
-      const message = await messageRepo.addReaction(messageId, emojiId, request.user.id);
+      const message = await messageRepo.addReaction(messageId, emojiId, request.userId);
       if (!message) {
         return reply.status(404).send(MESSAGE_NOT_FOUND);
       }
@@ -38,7 +38,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         type: "REACTION_ADD", payload: {
           messageId,
           emojiId,
-          userId: request.user.id,
+          userId: request.userId,
         },
       });
 
@@ -63,7 +63,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Remove an emoji reaction from a message",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -72,7 +72,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const message = await messageRepo.removeReaction(
         messageId,
         emojiId,
-        request.user.id,
+        request.userId,
       );
       if (!message) {
         return reply.status(404).send(MESSAGE_NOT_FOUND);
@@ -83,7 +83,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         type: "REACTION_REMOVE", payload: {
           messageId,
           emojiId,
-          userId: request.user.id,
+          userId: request.userId,
         },
       });
 

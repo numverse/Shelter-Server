@@ -1,7 +1,7 @@
 ﻿import fp from "fastify-plugin";
 import jwt from "jsonwebtoken";
 import { JWT_SECRET, ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from "../../config";
-import * as userRepo from "src/database/repository/userRepo";
+import * as userRepo from "../../database/redis/userRepo";
 
 const typeExpirations: Record<JWTPayload["type"], jwt.SignOptions["expiresIn"]> = {
   access: ACCESS_TOKEN_EXPIRES_IN as jwt.SignOptions["expiresIn"],
@@ -43,12 +43,12 @@ function verifyToken(type: JWTPayload["type"], token: string): { userId: string;
   }
 }
 
-async function createTokens(payload: JWTCreatePayload): Promise<{ accessToken: string; refreshToken: string }> {
+async function createTokens(payload: JWTCreatePayload & { deviceId: string }): Promise<{ accessToken: string; refreshToken: string }> {
   const accessToken = generateToken("access", payload);
   const refreshToken = generateToken("refresh", payload);
 
   // Save refresh token to database (JWT handles expiration)
-  await userRepo.saveRefreshToken(payload.userId, refreshToken);
+  await userRepo.setRefreshToken(payload.userId, payload.deviceId, refreshToken);
 
   return { accessToken, refreshToken };
 }

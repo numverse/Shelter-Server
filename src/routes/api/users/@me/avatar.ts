@@ -28,7 +28,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Upload or update the current user's avatar image",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -56,7 +56,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       // Get current user to check for existing avatar
-      const user = await userRepo.findUserById(request.user.id);
+      const user = await userRepo.findUserById(request.userId);
       if (!user) {
         return reply.status(404).send(USER_NOT_FOUND);
       }
@@ -71,7 +71,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       await userRepo.uploadAvatar(avatarId, buffer, mimeType);
 
       // Update user profile with new avatarId
-      const updatedUser = await userRepo.updateUserProfile(request.user.id, { avatarId });
+      const updatedUser = await userRepo.updateUserProfile(request.userId, { avatarId });
       if (!updatedUser) {
         return reply.status(500).send(USER_UPDATE_FAILED);
       }
@@ -96,19 +96,20 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Delete the current user's avatar",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
-      if (!request.user.avatarId) {
+      if (!user.avatarId) {
         return reply.status(404).send(AVATAR_NOT_FOUND);
       }
 
       // Delete avatar from GridFS
-      await userRepo.deleteAvatar(request.user.avatarId);
+      await userRepo.deleteAvatar(user.avatarId);
 
       // Update user profile to remove avatarId
-      const updatedUser = await userRepo.updateUserProfile(request.user.id, { avatarId: null });
+      const updatedUser = await userRepo.updateUserProfile(user.id, { avatarId: null });
       if (!updatedUser) {
         return reply.status(500).send(USER_UPDATE_FAILED);
       }

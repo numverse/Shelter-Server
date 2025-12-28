@@ -27,7 +27,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Create a new emoji pack with uploaded images",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -86,7 +86,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const pack = await emojiPackRepo.createEmojiPack({
         id: generateSnowflake(),
         name,
-        creatorId: request.user.id,
+        creatorId: request.userId,
         emojis,
       });
       if (!pack) {

@@ -30,7 +30,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Send a new message to a channel",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -86,7 +86,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         id: generateSnowflake(),
         channelId,
         content: content || "",
-        authorId: request.user.id,
+        authorId: request.userId,
         replyTo,
         attachments,
       });

@@ -2,6 +2,7 @@ import fastifyRateLimit, { type errorResponseBuilderContext } from "@fastify/rat
 import type { FastifyInstance, FastifyRequest } from "fastify";
 import { RATE_LIMIT_MAX } from "../../config.js";
 import { RATE_LIMIT_EXCEEDED } from "../../schemas/errors";
+import { redis } from "bun";
 
 export const autoConfig = (_fastify: FastifyInstance) => {
   return {
@@ -9,6 +10,7 @@ export const autoConfig = (_fastify: FastifyInstance) => {
       return RATE_LIMIT_EXCEEDED(Math.ceil(context.ttl / 1000));
     },
     max: RATE_LIMIT_MAX,
+    // redis: redis,
     timeWindow: 60 * 1000, // 1 minute
   };
 };

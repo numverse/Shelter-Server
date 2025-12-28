@@ -1,5 +1,6 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { generateSnowflake } from "../../../utils/snowflake";
+import * as userRepo from "../../../database/repository/userRepo";
 import * as channelRepo from "../../../database/repository/channelRepo";
 import { ChannelResponse, ErrorResponse } from "../../../schemas/response";
 import { channelDescriptionType, channelNameType } from "src/schemas/types";
@@ -23,10 +24,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Create a new chat channel",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(403).send(AUTHENTICATION_REQUIRED);
       }
-      if (!fastify.bitFieldManager.hasEitherFlag(request.user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
+      if (!fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 

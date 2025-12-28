@@ -25,7 +25,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Edit an existing message content",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      if (!request.userId) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
@@ -37,7 +37,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       if (!message) {
         return reply.status(404).send(MESSAGE_NOT_FOUND);
       }
-      if (message.authorId !== request.user.id) {
+      if (message.authorId !== request.userId) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 

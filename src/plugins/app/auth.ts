@@ -1,13 +1,12 @@
 ﻿import fp from "fastify-plugin";
-import { IUser } from "src/database/models/userModel";
-import * as userRepo from "src/database/repository/userRepo";
+import * as userRepo from "../../database/redis/userRepo";
 import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../config";
 import { DB_OPERATION_FAILED, INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN, NO_REFRESH_TOKEN } from "src/schemas/errors";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
 
 declare module "fastify" {
   export interface FastifyRequest {
-    user: IUser | null;
+    userId: string | null;
   }
   export interface FastifyReply {
     setTokenCookies: (accessToken: string, refreshToken: string) => FastifyReply;
@@ -37,12 +36,14 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
     }
   }
 
+  const deviceId = request.headers["x-device-id"] as string;
+
   if (token) {
     const payload = fastify.tokenManager.verifyToken("access", token);
     if (payload) {
-      const user = await userRepo.findUserById(payload.userId);
-      if (!user) return reply.status(401).send(INVALID_USER_TOKEN);
-      return request.user = user;
+      const exists = await userRepo.existsRefreshToken(payload.userId, deviceId);
+      if (!exists) return reply.status(401).send(INVALID_USER_TOKEN);
+      return void (request.userId = payload.userId);
     }
   }
 
@@ -51,31 +52,28 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
 
   const refreshPayload = fastify.tokenManager.verifyToken("refresh", refreshToken);
   if (refreshPayload) {
-    let user: IUser | null;
     try {
-      user = await userRepo.findUserById(refreshPayload.userId);
-      if (!user) return console.log("no user");
-      if (!user || user.refreshToken !== refreshToken) {
+      const userRefreshToken = await userRepo.getRefreshToken(refreshPayload.userId, deviceId);
+      if (userRefreshToken !== refreshToken) {
         return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
       }
-      await userRepo.clearRefreshToken(user.id);
 
       const tokens = await fastify.tokenManager.createTokens({
-        userId: user.id,
-        email: user.email,
+        deviceId: deviceId,
+        userId: refreshPayload.userId,
+        email: refreshPayload.email,
       });
       reply.setTokenCookies(tokens.accessToken, tokens.refreshToken);
     } catch {
       return reply.status(500).send(DB_OPERATION_FAILED);
     }
-
-    request.user = user;
+    return void (request.userId = refreshPayload.userId);
   }
 }
 
 export default fp(
   async function (fastify) {
-    fastify.decorateRequest("user", null);
+    fastify.decorateRequest("userId", null);
     fastify.decorateReply("setTokenCookies", function (this: FastifyReply, accessToken: string, refreshToken: string) {
       return setTokenCookies(this, accessToken, refreshToken);
     });

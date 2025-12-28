@@ -21,18 +21,19 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Add an emoji pack to user's collection",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
       const { id } = request.params;
 
-      if (!request.user.emojiPacks.includes(id)) {
+      if (!user.emojiPacks.includes(id)) {
         const packExists = await emojiPackRepo.existsEmojiPackById(id);
         if (!packExists) {
           return reply.status(404).send(EMOJI_PACK_NOT_FOUND);
         }
 
-        await userRepo.addUserEmojiPack(request.user.id, id);
+        await userRepo.addUserEmojiPack(user.id, id);
       }
 
       return reply.send({ success: true });
@@ -53,15 +54,16 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Remove an emoji pack from user's collection",
     },
     handler: async (request, reply) => {
-      if (!request.user) {
+      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
+      if (!user) {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
       const { id } = request.params;
 
       // Update user's emoji packs in MongoDB
 
-      if (request.user.emojiPacks.includes(id)) {
-        await userRepo.removeUserEmojiPack(request.user.id, id);
+      if (user.emojiPacks.includes(id)) {
+        await userRepo.removeUserEmojiPack(user.id, id);
       }
 
       return reply.status(204).send();
