@@ -1,7 +1,8 @@
 ﻿import mongoose, { Schema } from "mongoose";
 
 export interface IReaction {
-  emojiId: string;
+  emojiId?: string;
+  emojiName: string;
   userIds: string[];
 }
 
@@ -30,7 +31,8 @@ export interface IMessageDoc extends Omit<IMessage, "id"> {
 
 const ReactionSchema: Schema = new Schema(
   {
-    emoji: { type: String, required: true },
+    emojiId: { type: String, required: false },
+    emojiName: { type: String, required: true },
     userIds: { type: [String], default: [] },
   },
   { _id: false },

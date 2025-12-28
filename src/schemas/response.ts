@@ -25,7 +25,7 @@ export const UserResponse = Type.Object({
   email: parts.emailType,
   flags: parts.userFlagsType,
   avatarId: Type.Optional(parts.snowflakeType),
-  emojiPacks: Type.Array(parts.snowflakeType),
+  emojiPacks: Type.Optional(Type.Array(parts.snowflakeType)),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
 });
@@ -57,10 +57,16 @@ export const MessageResponse = Type.Object({
   id: parts.snowflakeType,
   channelId: parts.snowflakeType,
   authorId: parts.snowflakeType,
-  content: Type.String(),
+  content: Type.Optional(Type.String()),
   replyTo: Type.Optional(parts.snowflakeType),
   attachments: Type.Optional(Type.Array(Type.Omit(FileMetadataResponse, ["createdAt", "uploaderId"]))),
-  // reactions: Type.Optional(),
+  reactions: Type.Optional(Type.Array(
+    Type.Object({
+      emojiId: Type.Optional(parts.snowflakeType),
+      emojiName: parts.emojiNameType,
+      userIds: Type.Array(parts.snowflakeType),
+    }),
+  )),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
 });
