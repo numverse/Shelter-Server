@@ -11,6 +11,7 @@ const wsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     websocket: true,
   }, async (socket, request) => {
+    console.log("New WebSocket connection attempt");
     const token = request.cookies?.at;
 
     if (!token) {

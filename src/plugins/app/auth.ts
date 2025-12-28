@@ -81,6 +81,7 @@ export default fp(
     });
     fastify.addHook("onRoute", (routeOptions) => {
       const security = routeOptions.schema?.security;
+      if (routeOptions.websocket) return;
       if (!security || security?.length) {
         routeOptions.preHandler = async (request, reply) => {
           await authenticate(fastify, request, reply);
