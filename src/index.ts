@@ -72,13 +72,23 @@ declare module "fastify" {
     host: "0.0.0.0",
   });
 
-  redis.connect().catch((err) => {
-    log(`Redis connection error: ${err.message}`, "redis");
-  });
+  redis.connect();
+  log("Connecting to " + process.env.REDIS_URL, "redis");
+
+  redis.onconnect = () => {
+    log("Connected to Redis ", "redis");
+  };
+
+  redis.onclose = () => {
+    log("Disconnected from Redis", "redis");
+    setTimeout(() => {
+      redis.connect();
+    }, 5000);
+  };
 
   // Print all registered routes
-  console.log("Registered routes:");
-  console.log(fastify.printRoutes());
+  // console.log("Registered routes:");
+  // console.log(fastify.printRoutes());
 
   log(`serving on port ${PORT}`);
 })();
