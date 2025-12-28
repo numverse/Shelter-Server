@@ -5,13 +5,13 @@ export async function setRefreshToken(userId: string, deviceId: string, payload:
   refreshToken: string;
   userAgent: string;
   ipAddress: string;
-  timestamp?: Date;
+  timestamp?: number;
 }): Promise<number> {
   return await redis.hsetex(`rt:${userId}`, "EX", REFRESH_TOKEN_MAX_AGE, "FIELDS", 4,
     deviceId, payload.refreshToken,
     `${deviceId};ua`, payload.userAgent,
     `${deviceId};ip`, payload.ipAddress,
-    `${deviceId};ts`, (payload.timestamp ?? new Date()).toISOString(),
+    `${deviceId};ts`, (payload.timestamp ?? Date.now()).toString(),
   );
 }
 

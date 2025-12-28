@@ -60,6 +60,8 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
 
       const tokens = await fastify.tokenManager.createTokens({
         deviceId: deviceId,
+        userAgent: request.headers["user-agent"] || "unknown",
+        ipAddress: request.ip,
         userId: refreshPayload.userId,
         email: refreshPayload.email,
       });
