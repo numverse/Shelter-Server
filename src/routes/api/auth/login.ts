@@ -1,12 +1,13 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "../../../database/repository/userRepo";
-import { emailType, passwordType, snowflakeType } from "src/schemas/types";
+import { emailType, passwordType, snowflakeType, XDeviceIdHeader } from "src/schemas/types";
 import { ErrorResponse } from "src/schemas/response";
 import { INVALID_EMAIL_PASSWORD, TOKEN_GENERATION_FAILED } from "src/schemas/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/login", {
     schema: {
+      headers: XDeviceIdHeader,
       body: Type.Object({
         email: emailType,
         password: passwordType,
@@ -37,7 +38,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const tokens = await fastify.tokenManager.createTokens({
-        deviceId: request.headers["x-device-id"] as string,
+        deviceId: request.headers["x-device-id"],
         userAgent: request.headers["user-agent"] || "unknown",
         ipAddress: request.ip,
         userId: user.id,

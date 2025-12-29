@@ -3,7 +3,7 @@ import * as userRepo from "../../database/redis/userRepo";
 import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../config";
 import { DB_OPERATION_FAILED, INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN, NO_REFRESH_TOKEN } from "src/schemas/errors";
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { Type } from "@fastify/type-provider-typebox";
+import { XDeviceIdHeader } from "src/schemas/types";
 
 declare module "fastify" {
   export interface FastifyRequest {
@@ -81,17 +81,15 @@ export default fp(
       return setTokenCookies(this, accessToken, refreshToken);
     });
     fastify.addHook("onRoute", (routeOptions) => {
-      const security = routeOptions.schema?.security;
-      if (routeOptions.websocket) return;
+      if (!routeOptions.schema || routeOptions.websocket) return;
+
+      const security = routeOptions.schema.security;
       if (!security || security?.length) {
         routeOptions.preHandler = async (request, reply) => {
           await authenticate(fastify, request, reply);
         };
+        routeOptions.schema.headers = XDeviceIdHeader;
       }
-      if (routeOptions.schema)
-        routeOptions.schema.headers = Type.Object({
-          "x-device-id": Type.String({ pattern: "^[^;]+$", description: "Unique device identifier" }),
-        });
     });
   },
   { name: "auth" },

@@ -1,13 +1,15 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "src/database/repository/userRepo";
 import { generateSnowflake } from "src/utils/snowflake";
-import { displayNameType, emailType, passwordType, usernameType } from "src/schemas/types";
+import { displayNameType, emailType, passwordType, usernameType, XDeviceIdHeader } from "src/schemas/types";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { EMAIL_EXISTS, REGISTRATION_FAILED, TOKEN_GENERATION_FAILED, USERNAME_TAKEN } from "src/schemas/errors";
+import { DOMAIN, PROTOCOL } from "src/config";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/register", {
     schema: {
+      headers: XDeviceIdHeader,
       body: Type.Object({
         email: emailType,
         password: passwordType,
@@ -61,7 +63,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const tokens = await fastify.tokenManager.createTokens({
-        deviceId: request.headers["x-device-id"] as string,
+        deviceId: request.headers["x-device-id"],
         userAgent: request.headers["user-agent"] || "unknown",
         ipAddress: request.ip,
         userId: user.id,
@@ -72,9 +74,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const locale = request.headers["accept-language"]?.split(",")[0] || "en-US";
-      const proto = (request.headers["x-forwarded-proto"] as string) ?? "http";
-      const host = request.headers.host ?? "localhost:3000";
-      const verifyUrl = `${proto}://${host}/verify#token=${encodeURIComponent(verificationCode)}`;
+      const verifyUrl = `${PROTOCOL}://${DOMAIN}/verify#token=${encodeURIComponent(verificationCode)}`;
 
       if (locale.startsWith("ko")) {
         await fastify.mailer.sendMail({

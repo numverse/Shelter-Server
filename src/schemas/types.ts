@@ -77,3 +77,10 @@ export const messageContentType = Type.String({
   maxLength: 2000,
   description: "The content of the message",
 });
+
+export const XDeviceIdHeader = Type.Object({
+  "x-device-id": Type.String({
+    pattern: "^[^;]+$",
+    description: "Unique device identifier",
+  }),
+});

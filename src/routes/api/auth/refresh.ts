@@ -2,10 +2,12 @@
 import * as userRepo from "../../../database/redis/userRepo";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { INVALID_OR_EXPIRED_REFRESH_TOKEN, NO_REFRESH_TOKEN, TOKEN_GENERATION_FAILED } from "src/schemas/errors";
+import { XDeviceIdHeader } from "src/schemas/types";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/refresh", {
     schema: {
+      headers: XDeviceIdHeader,
       response: {
         200: SuccessResponse,
         400: ErrorResponse,
@@ -22,7 +24,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       if (!refreshToken) {
         return reply.status(400).send(NO_REFRESH_TOKEN);
       }
-      const deviceId = request.headers["x-device-id"] as string;
+      const deviceId = request.headers["x-device-id"];
 
       const payload = fastify.tokenManager.verifyToken("refresh", refreshToken);
       if (!payload) {

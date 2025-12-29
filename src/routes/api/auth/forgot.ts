@@ -3,6 +3,7 @@ import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { emailType } from "src/schemas/types";
 import * as userRepo from "src/database/repository/userRepo";
 import { USER_NOT_FOUND } from "src/schemas/errors";
+import { DOMAIN, PROTOCOL } from "src/config";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/forgot", {
@@ -39,9 +40,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       });
 
       const locale = request.headers["accept-language"]?.split(",")[0] || "en-US";
-      const proto = (request.headers["x-forwarded-proto"] as string) ?? "http";
-      const host = request.headers.host ?? "localhost:3000";
-      const verifyUrl = `${proto}://${host}/reset#token=${encodeURIComponent(emailToken)}`;
+      const verifyUrl = `${PROTOCOL}://${DOMAIN}/reset#token=${encodeURIComponent(emailToken)}`;
 
       if (locale.startsWith("ko")) {
         await fastify.mailer.sendMail({

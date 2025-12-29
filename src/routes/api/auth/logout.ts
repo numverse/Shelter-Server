@@ -2,10 +2,12 @@ import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "../../../database/redis/userRepo";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { AUTHENTICATION_REQUIRED } from "src/schemas/errors";
+import { XDeviceIdHeader } from "src/schemas/types";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/logout", {
     schema: {
+      headers: XDeviceIdHeader,
       response: {
         200: SuccessResponse,
         401: ErrorResponse,
@@ -19,7 +21,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
-      const deviceId = request.headers["x-device-id"] as string;
+      const deviceId = request.headers["x-device-id"];
       await userRepo.clearRefreshToken(request.userId, deviceId);
 
       return reply
