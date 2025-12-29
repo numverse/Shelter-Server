@@ -10,8 +10,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         200: Type.Array(Type.Object({
           deviceId: Type.String(),
           userAgent: Type.String(),
-          ipAddress: Type.String(),
-          lastUsedTime: Type.String(),
+          ipAddress: Type.Union([
+            Type.String({ format: "ipv4" }),
+            Type.String({ format: "ipv6" }),
+          ]),
+          lastUsedTime: Type.String({ format: "date-time" }),
         })),
         401: ErrorResponse,
       },
