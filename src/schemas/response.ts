@@ -78,6 +78,6 @@ export const ErrorResponse = Type.Object({
   statusCode: Type.Number(),
 });
 
-export const SuccessResponse = Type.Object({
-  success: Type.Boolean(),
-});
+export const SuccessResponse = {
+  success: true,
+};

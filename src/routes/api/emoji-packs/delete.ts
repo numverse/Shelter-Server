@@ -1,7 +1,7 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as emojiPackRepo from "../../../database/repository/emojiPackRepo";
 import * as userRepo from "../../../database/repository/userRepo";
-import { ErrorResponse } from "src/schemas/response";
+import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { snowflakeType } from "src/schemas/types";
 import { AUTHENTICATION_REQUIRED, EMOJI_PACK_DELETE_FAILED, EMOJI_PACK_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
@@ -13,7 +13,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         id: snowflakeType,
       }),
       response: {
-        204: Type.Null(),
+        204: SuccessResponse,
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
@@ -47,7 +47,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(500).send(EMOJI_PACK_DELETE_FAILED);
       }
 
-      return reply.status(204).send();
+      return reply.status(204).send(SuccessResponse);
     },
   });
 };

@@ -2,7 +2,7 @@
 import * as channelRepo from "../../../database/repository/channelRepo";
 import * as messageRepo from "../../../database/repository/messageRepo";
 import * as userRepo from "../../../database/repository/userRepo";
-import { ErrorResponse } from "../../../schemas/response";
+import { ErrorResponse, SuccessResponse } from "../../../schemas/response";
 import { snowflakeType } from "src/schemas/types";
 import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
@@ -12,7 +12,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     schema: {
       params: Type.Object({ id: snowflakeType }),
       response: {
-        204: Type.Null(),
+        204: SuccessResponse,
         403: ErrorResponse,
         404: ErrorResponse,
       },
@@ -45,7 +45,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         },
       });
 
-      return reply.status(204).send();
+      return reply.status(204).send(SuccessResponse);
     },
   });
 };
