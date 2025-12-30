@@ -45,7 +45,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         },
       });
 
-      return reply.status(204).send(SuccessResponse);
+      return reply.status(204).send({ success: true });
     },
   });
 };

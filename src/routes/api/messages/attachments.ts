@@ -1,5 +1,5 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { ErrorResponse } from "src/schemas/response";
+import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { AUTHENTICATION_REQUIRED, FILE_DELETE_FAILED, FILE_NOT_FOUND, MESSAGE_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
 import { snowflakeType } from "src/schemas/types";
 import messageRepo from "src/database/repository/messageRepo";
@@ -12,7 +12,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         attachmentId: snowflakeType,
       }),
       response: {
-        204: Type.Null(),
+        204: SuccessResponse,
         401: ErrorResponse,
         403: ErrorResponse,
         404: ErrorResponse,
@@ -51,7 +51,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         type: "MESSAGE_UPDATE",
         payload: newMessage,
       });
-      return reply.status(204).send();
+      return reply.status(204).send({ success: true });
     },
   });
 };

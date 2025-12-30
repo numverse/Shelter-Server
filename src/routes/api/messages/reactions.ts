@@ -54,7 +54,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         emojiId: snowflakeType,
       }),
       response: {
-        204: Type.Null(),
+        204: SuccessResponse,
         401: ErrorResponse,
         404: ErrorResponse,
       },
@@ -87,7 +87,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         },
       });
 
-      return reply.status(204).send();
+      return reply.status(204).send({ success: true });
     },
   });
 };

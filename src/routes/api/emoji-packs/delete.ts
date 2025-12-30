@@ -47,7 +47,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(500).send(EMOJI_PACK_DELETE_FAILED);
       }
 
-      return reply.status(204).send(SuccessResponse);
+      return reply.status(204).send({ success: true });
     },
   });
 };
