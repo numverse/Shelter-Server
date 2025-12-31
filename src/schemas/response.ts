@@ -1,13 +1,40 @@
 import { Type } from "@fastify/type-provider-typebox";
 import * as parts from "./types";
+import { ChannelType } from "src/database/models/channelModel";
 
-export const ChannelResponse = Type.Object({
+export const TextChannel = Type.Object({
   id: parts.snowflakeType,
+  type: Type.Enum(ChannelType, { const: ChannelType.GuildText }),
   name: parts.channelNameType,
-  description: Type.Optional(parts.channelDescriptionType),
+  parentId: Type.Optional(parts.snowflakeType),
+  topic: Type.Optional(parts.channelTopicType),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
 });
+export const VoiceChannel = Type.Object({
+  id: parts.snowflakeType,
+  type: Type.Enum(ChannelType, { const: ChannelType.GuildVoice }),
+  name: parts.channelNameType,
+  parentId: Type.Optional(parts.snowflakeType),
+  topic: Type.Optional(parts.channelTopicType),
+  bitrate: parts.channelBitrateType,
+  createdAt: parts.dateStringType,
+  updatedAt: Type.Optional(parts.dateStringType),
+});
+export const CategoryChannel = Type.Object({
+  id: parts.snowflakeType,
+  type: Type.Enum(ChannelType, { const: ChannelType.GuildCategory }),
+  name: parts.channelNameType,
+  childrenIds: Type.Optional(Type.Array(parts.snowflakeType)),
+  createdAt: parts.dateStringType,
+  updatedAt: Type.Optional(parts.dateStringType),
+});
+
+export const ChannelResponse = Type.Union([
+  TextChannel,
+  VoiceChannel,
+  CategoryChannel,
+]);
 
 export const UserBasicResponse = Type.Object({
   id: parts.snowflakeType,

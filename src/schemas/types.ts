@@ -44,10 +44,16 @@ export const channelNameType = Type.String({
   description: "The name of the channel",
 });
 
-export const channelDescriptionType = Type.String({
+export const channelTopicType = Type.String({
   minLength: 0,
   maxLength: 256,
-  description: "The description of the channel",
+  description: "The topic of the channel",
+});
+
+export const channelBitrateType = Type.Number({
+  minimum: 8000,
+  maximum: 96000,
+  description: "The bitrate of the voice channel in bits per second",
 });
 
 export const emojiPackNameType = Type.String({

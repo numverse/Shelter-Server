@@ -23,7 +23,7 @@ export async function findMessagesByChannel(
 
   const hasMore = docs.length > limit;
   const resultDocs = hasMore ? docs.slice(0, limit) : docs;
-  const messages = toApiResponseArray(resultDocs).reverse();
+  const messages = toApiResponseArray<IMessage>(resultDocs).reverse();
 
   return { messages, hasMore };
 }
@@ -51,9 +51,9 @@ export async function findMessagesAround(
     .limit(afterCount + 1)
     .lean<IMessageDoc[]>();
 
-  const before = toApiResponseArray(beforeDocs).reverse();
-  const after = toApiResponseArray(afterDocs);
-  const anchor = toApiResponse(anchorDoc);
+  const before = toApiResponseArray<IMessage>(beforeDocs).reverse();
+  const after = toApiResponseArray<IMessage>(afterDocs);
+  const anchor = toApiResponse<IMessage>(anchorDoc);
 
   return {
     anchor, before: {

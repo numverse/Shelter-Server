@@ -1,19 +1,16 @@
-﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+﻿import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import { generateSnowflake } from "../../../utils/snowflake";
 import * as userRepo from "../../../database/repository/userRepo";
 import * as channelRepo from "../../../database/repository/channelRepo";
 import { ChannelResponse, ErrorResponse } from "../../../schemas/response";
-import { channelDescriptionType, channelNameType } from "src/schemas/types";
 import { AUTHENTICATION_REQUIRED, CHANNEL_CREATION_FAILED, PERMISSION_DENIED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
+import { CreateChannelQuery } from "src/schemas/query";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
     schema: {
-      body: Type.Object({
-        name: channelNameType,
-        description: Type.Optional(channelDescriptionType),
-      }),
+      body: CreateChannelQuery,
       response: {
         201: ChannelResponse,
         403: ErrorResponse,
@@ -22,22 +19,21 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       tags: ["Channels"],
       summary: "Create a new channel",
       description: "Create a new chat channel",
+
     },
     handler: async (request, reply) => {
-      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
-      if (!user) {
+      if (!request.userId) {
         return reply.status(403).send(AUTHENTICATION_REQUIRED);
       }
-      if (!fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
+      const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
+        UserFlags.MODERATOR, UserFlags.DEVELOPER);
+      if (!userAllowed) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 
-      const { name, description } = request.body;
-
       const channel = await channelRepo.createChannel({
         id: generateSnowflake(),
-        name,
-        description,
+        ...request.body,
       });
       if (!channel) {
         return reply.status(500).send(CHANNEL_CREATION_FAILED);
@@ -47,11 +43,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         type: "CHANNEL_CREATE",
         payload: channel,
       });
-
       return reply.status(201).send({
-        id: channel.id,
-        name: channel.name,
-        description: channel.description,
+        ...channel,
         createdAt: channel.createdAt.toISOString(),
         updatedAt: channel.updatedAt?.toISOString(),
       });

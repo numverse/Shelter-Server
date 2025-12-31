@@ -1,5 +1,5 @@
 ﻿import { Readable } from "stream";
-import { UserModel, getAvatarGridFSBucket, type IUser, type IUserDoc } from "../models/userModel";
+import { UserFlags, UserModel, getAvatarGridFSBucket, type IUser, type IUserDoc } from "../models/userModel";
 import { toApiResponse, toApiResponseArray } from "../utils";
 import { Types, UpdateQuery } from "mongoose";
 
@@ -46,6 +46,16 @@ export async function findUsersByIds(ids: string[]): Promise<IUser[]> {
 export async function findUsersByUsernames(usernames: string[]): Promise<IUser[]> {
   const docs = await UserModel.find({ username: { $in: usernames } }).lean<IUserDoc[]>();
   return toApiResponseArray(docs);
+}
+
+export async function hasAllUserFlags(id: string, ...flags: UserFlags[]): Promise<boolean> {
+  const exists = await UserModel.exists({ _id: id, flags: { $bitsAllSet: flags.reduce((acc, flag) => acc | flag, 0) } });
+  return exists !== null;
+}
+
+export async function hasAnyUserFlags(id: string, ...flags: UserFlags[]): Promise<boolean> {
+  const exists = await UserModel.exists({ _id: id, flags: { $bitsAnySet: flags.reduce((acc, flag) => acc | flag, 0) } });
+  return exists !== null;
 }
 
 export async function createUser(data: {

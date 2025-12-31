@@ -1,5 +1,5 @@
 ﻿import { IMessage } from "src/database/models/messageModel";
-import { IChannel } from "src/database/models/channelModel";
+import { Channel } from "src/database/models/channelModel";
 
 export type BroadcastFn = (message: string) => void;
 
@@ -22,8 +22,8 @@ export type WSMessage
     | { type: "REACTION_ADD"; payload: ReactionPayload }
     | { type: "REACTION_REMOVE"; payload: ReactionPayload }
     | { type: "PRESENCE_UPDATE"; payload: PresenceUpdatePayload }
-    | { type: "CHANNEL_CREATE"; payload: IChannel }
-    | { type: "CHANNEL_UPDATE"; payload: IChannel }
+    | { type: "CHANNEL_CREATE"; payload: Channel }
+    | { type: "CHANNEL_UPDATE"; payload: Channel }
     | { type: "CHANNEL_DELETE"; payload: { channelId: string } };
 
 export enum GatewayOpCode {

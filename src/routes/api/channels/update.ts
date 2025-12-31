@@ -2,7 +2,7 @@
 import * as channelRepo from "../../../database/repository/channelRepo";
 import * as userRepo from "../../../database/repository/userRepo";
 import { ChannelResponse, ErrorResponse } from "../../../schemas/response";
-import { channelDescriptionType, channelNameType, snowflakeType } from "src/schemas/types";
+import { channelTopicType, channelNameType, snowflakeType } from "src/schemas/types";
 import { CHANNEL_NOT_FOUND, AUTHENTICATION_REQUIRED, PERMISSION_DENIED } from "src/schemas/errors";
 import { UserFlags } from "src/database/models/userModel";
 
@@ -12,7 +12,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       params: Type.Object({ id: snowflakeType }),
       body: Type.Object({
         name: Type.Optional(channelNameType),
-        description: Type.Optional(channelDescriptionType),
+        topic: Type.Optional(channelTopicType),
       }),
       response: {
         200: ChannelResponse,
@@ -46,9 +46,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       });
 
       return reply.send({
-        id: channel.id,
-        name: channel.name,
-        description: channel.description,
+        ...channel,
         createdAt: channel.createdAt.toISOString(),
         updatedAt: channel.updatedAt?.toISOString(),
       });

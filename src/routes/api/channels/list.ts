@@ -18,9 +18,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const channels = await channelRepo.findAllChannels();
       return reply.status(200).send({
         channels: channels.map((channel) => ({
-          id: channel.id,
-          name: channel.name,
-          description: channel.description,
+          ...channel,
           createdAt: channel.createdAt.toISOString(),
           updatedAt: channel.updatedAt?.toISOString(),
         })),
