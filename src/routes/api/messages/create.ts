@@ -85,7 +85,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(400).send(MISSING_REQUIRED_FIELDS);
       }
 
-      const channelExists = await channelRepo.existsChannel(channelId, ChannelType.GuildText);
+      const channelExists = await channelRepo.existsChannel(channelId, ChannelType.GuildText, ChannelType.GuildVoice);
       if (!channelExists) {
         return reply.status(404).send(CHANNEL_NOT_EXIST_OR_INACCESSIBLE);
       }
