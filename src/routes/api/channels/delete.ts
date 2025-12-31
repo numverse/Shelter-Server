@@ -21,11 +21,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Delete a channel by ID",
     },
     handler: async (request, reply) => {
-      const user = request.userId ? await userRepo.findUserById(request.userId) : null;
-      if (!user) {
+      if (!request.userId) {
         return reply.status(403).send(AUTHENTICATION_REQUIRED);
       }
-      if (!fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
+      const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
+        UserFlags.MODERATOR, UserFlags.DEVELOPER);
+      if (!userAllowed) {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 
