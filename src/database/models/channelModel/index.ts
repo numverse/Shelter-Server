@@ -25,7 +25,7 @@ export enum ChannelType {
 
 const BaseChannelSchema: Schema = new Schema(
   {
-    _id: { type: String, required: true },
+    _id: { type: String, required: true, alias: "id" },
     type: { type: Number, required: true },
     name: { type: String, required: true },
     createdAt: { type: Date, required: true, default: Date.now },
