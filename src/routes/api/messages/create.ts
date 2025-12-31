@@ -2,10 +2,12 @@
 import { generateSnowflake } from "../../../utils/snowflake";
 import * as messageRepo from "../../../database/repository/messageRepo";
 import * as fileRepo from "../../../database/repository/fileRepo";
+import * as channelRepo from "../../../database/repository/channelRepo";
 import type { IAttachment } from "../../../database/models/messageModel";
 import { fileType, messageContentType, snowflakeType } from "src/schemas/types";
-import { AUTHENTICATION_REQUIRED, FILE_TOO_LARGE, MISSING_REQUIRED_FIELDS } from "src/schemas/errors";
+import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_EXIST_OR_INACCESSIBLE, FILE_TOO_LARGE, MISSING_REQUIRED_FIELDS } from "src/schemas/errors";
 import { MessageResponse, ErrorResponse } from "src/schemas/response";
+import { ChannelType } from "src/database/models/channelModel";
 
 // 50MB max file size
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
@@ -23,6 +25,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       response: {
         201: MessageResponse,
         400: ErrorResponse,
+        404: ErrorResponse,
         401: ErrorResponse,
       },
       tags: ["Messages"],
@@ -80,6 +83,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       if (!channelId || (!content && attachments.length === 0)) {
         return reply.status(400).send(MISSING_REQUIRED_FIELDS);
+      }
+
+      const channelExists = await channelRepo.existsChannel(channelId, ChannelType.GuildText);
+      if (!channelExists) {
+        return reply.status(404).send(CHANNEL_NOT_EXIST_OR_INACCESSIBLE);
       }
 
       const message = await messageRepo.createMessage({

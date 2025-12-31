@@ -80,6 +80,12 @@ export const CHANNEL_NOT_FOUND = {
   error: "Not Found",
   statusCode: 404,
 };
+export const CHANNEL_NOT_EXIST_OR_INACCESSIBLE = {
+  code: "CHANNEL_NOT_EXIST_OR_INACCESSIBLE",
+  message: "The channel does not exist or is inaccessible.",
+  error: "Not Found",
+  statusCode: 404,
+};
 
 // Emoji Errors
 export const EMOJI_NOT_FOUND = {

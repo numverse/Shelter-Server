@@ -5,6 +5,7 @@ import { DMChannelModel } from "src/database/models/channelModel/dmChannel";
 import { VoiceChannelModel } from "src/database/models/channelModel/voiceChannel";
 import { GroupDMChannelModel } from "src/database/models/channelModel/groupDmChannel";
 import { CategoryChannelModel } from "src/database/models/channelModel/categoryChannel";
+import type { QueryFilter } from "mongoose";
 
 export const channelTypeToModel: Record<ChannelType, typeof ChannelModel> = {
   [ChannelType.GuildText]: GuildTextChannelModel,
@@ -13,6 +14,15 @@ export const channelTypeToModel: Record<ChannelType, typeof ChannelModel> = {
   [ChannelType.GroupDM]: GroupDMChannelModel,
   [ChannelType.GuildCategory]: CategoryChannelModel,
 };
+
+export async function existsChannel(id: string, ...types: ChannelType[]): Promise<boolean> {
+  const query: QueryFilter<ChannelDoc> = { _id: id };
+  if (types && types.length > 0) {
+    query.type = { $in: types };
+  }
+  const exists = await ChannelModel.exists(query);
+  return exists !== null;
+}
 
 export async function findChannelById(id: string): Promise<Channel | null> {
   const doc = await ChannelModel.findById(id).lean<ChannelDoc>();
