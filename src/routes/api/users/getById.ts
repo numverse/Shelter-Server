@@ -5,9 +5,9 @@ import { ErrorResponse, UserBasicResponse } from "src/schemas/response";
 import { USER_NOT_FOUND } from "src/schemas/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.get("/:id", {
+  fastify.get("/:userId", {
     schema: {
-      params: Type.Object({ id: snowflakeType }),
+      params: Type.Object({ userId: snowflakeType }),
       response: {
         200: UserBasicResponse,
         404: ErrorResponse,
@@ -17,8 +17,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Retrieve a user by their ID",
     },
     handler: async (request, reply) => {
-      const { id } = request.params;
-      const user = await userRepo.findUserById(id);
+      const { userId } = request.params;
+      const user = await userRepo.findUserById(userId);
 
       if (!user) {
         return reply.status(404).send(USER_NOT_FOUND);

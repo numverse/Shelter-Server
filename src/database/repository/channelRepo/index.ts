@@ -48,13 +48,13 @@ export async function createChannel<T extends ChannelType>(data: { type: T; id: 
 }
 
 export async function setChannelOrder(...order: {
-  id: string;
+  channelId: string;
   position: number;
   parentId?: string;
 }[]) {
   const bulkOps = order.map((item) => ({
     updateOne: {
-      filter: { _id: item.id },
+      filter: { _id: item.channelId },
       update: {
         position: item.position,
         parentId: item.parentId,

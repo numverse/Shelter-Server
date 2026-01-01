@@ -10,7 +10,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.patch("/", {
     schema: {
       body: Type.Array(Type.Object({
-        id: snowflakeType,
+        channelId: snowflakeType,
         position: channelPositionType,
         parentId: Type.Optional(snowflakeType),
       })),
@@ -20,8 +20,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         500: ErrorResponse,
       },
       tags: ["Channels"],
-      summary: "Update a channel",
-      description: "Update an existing channel's name or description",
+      summary: "Set channel order",
+      description: "Update the order of channels",
     },
     handler: async (request, reply) => {
       if (!request.userId) {
@@ -40,7 +40,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       fastify.broadcast({
         type: "CHANNEL_UPDATE",
-        payload: request.body,
+        payload: request.body.map((item) => ({
+          id: item.channelId,
+          position: item.position,
+          parentId: item.parentId,
+        })),
       });
       return reply.send({ success: true });
     },

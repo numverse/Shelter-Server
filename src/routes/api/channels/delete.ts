@@ -8,9 +8,9 @@ import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_FOUND, PERMISSION_DENIED } from "s
 import { UserFlags } from "src/database/models/userModel";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.delete("/:id", {
+  fastify.delete("/:channelId", {
     schema: {
-      params: Type.Object({ id: snowflakeType }),
+      params: Type.Object({ channelId: snowflakeType }),
       response: {
         204: SuccessResponse,
         403: ErrorResponse,
@@ -30,11 +30,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 
-      const { id } = request.params;
+      const { channelId } = request.params;
 
-      await messageRepo.deleteMessagesByChannel(id);
+      await messageRepo.deleteMessagesByChannel(channelId);
 
-      const deleted = await channelRepo.deleteChannel(id);
+      const deleted = await channelRepo.deleteChannel(channelId);
       if (!deleted) {
         return reply.status(404).send(CHANNEL_NOT_FOUND);
       }
@@ -42,7 +42,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       fastify.broadcast({
         type: "CHANNEL_DELETE",
         payload: {
-          channelId: id,
+          channelId: channelId,
         },
       });
 
