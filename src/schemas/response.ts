@@ -25,7 +25,7 @@ export const CategoryChannel = Type.Object({
   id: parts.snowflakeType,
   type: Type.Enum(ChannelType, { const: ChannelType.GuildCategory }),
   name: parts.channelNameType,
-  childrenIds: Type.Optional(Type.Array(parts.snowflakeType)),
+  childIds: Type.Optional(Type.Array(parts.snowflakeType)),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
 });
