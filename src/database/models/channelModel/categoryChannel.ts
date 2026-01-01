@@ -7,14 +7,14 @@ export interface CategoryChannel {
   name: string;
   createdAt: Date;
   updatedAt?: Date;
-  childrenIds: string[];
+  childIds: string[];
 }
 export interface CategoryChannelDoc extends Omit<CategoryChannel, "id"> {
   _id: string;
 }
 
 const CategorySchema: Schema = new Schema({
-  children: { type: [String], default: [] },
+  childIds: { type: [String], default: [] },
 });
 
 export const CategoryChannelModel = ChannelModel.discriminator<CategoryChannelDoc>(
