@@ -1,6 +1,6 @@
 import { ChannelModel, ChannelType, type Channel, type ChannelDoc } from "src/database/models/channelModel";
 import { toApiResponse, toApiResponseArray } from "src/database/utils";
-import { GuildTextChannelModel } from "src/database/models/channelModel/guildTextChannel";
+import { TextChannelModel } from "src/database/models/channelModel/textChannel";
 import { DMChannelModel } from "src/database/models/channelModel/dmChannel";
 import { VoiceChannelModel } from "src/database/models/channelModel/voiceChannel";
 import { GroupDMChannelModel } from "src/database/models/channelModel/groupDmChannel";
@@ -8,7 +8,7 @@ import { CategoryChannelModel } from "src/database/models/channelModel/categoryC
 import type { QueryFilter } from "mongoose";
 
 export const channelTypeToModel: Record<ChannelType, typeof ChannelModel> = {
-  [ChannelType.GuildText]: GuildTextChannelModel,
+  [ChannelType.GuildText]: TextChannelModel,
   [ChannelType.DM]: DMChannelModel,
   [ChannelType.GuildVoice]: VoiceChannelModel,
   [ChannelType.GroupDM]: GroupDMChannelModel,
@@ -57,13 +57,14 @@ export async function setChannelOrder(...order: {
       filter: { _id: item.channelId },
       update: {
         $set: {
-          position: item.position,
+          position: Number(item.position),
           parentId: item.parentId,
           updatedAt: new Date(),
         },
       },
     },
   }));
+
   if (bulkOps.length === 0) return;
   return await ChannelModel.bulkWrite(bulkOps);
 }

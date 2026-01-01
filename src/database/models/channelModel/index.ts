@@ -1,5 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import { GuildTextChannel } from "./guildTextChannel";
+import { TextChannel } from "./textChannel";
 import { VoiceChannel } from "./voiceChannel";
 import { CategoryChannel } from "./categoryChannel";
 import { DMChannel } from "./dmChannel";
@@ -12,7 +12,7 @@ export interface BaseChannel {
   updatedAt?: Date;
 }
 
-export type Channel = GuildTextChannel
+export type Channel = TextChannel
   | DMChannel
   | VoiceChannel
   | GroupDMChannel
@@ -36,6 +36,9 @@ const BaseChannelSchema: Schema = new Schema(
     type: { type: Number, required: true },
     createdAt: { type: Date, required: true, default: Date.now },
     updatedAt: { type: Date, optional: true },
+
+    position: { type: Number, optional: true },
+    parentId: { type: String, optional: true },
   },
   {
     _id: false,

@@ -1,27 +1,27 @@
 import { UpdateQuery, QueryFilter } from "mongoose";
 import { ChannelDoc, ChannelModel } from "src/database/models/channelModel";
-import { type GuildTextChannel, type GuildTextChannelDoc, GuildTextChannelModel } from "src/database/models/channelModel/guildTextChannel";
+import { type TextChannel, type TextChannelDoc, TextChannelModel } from "src/database/models/channelModel/textChannel";
 import { toApiResponse } from "src/database/utils";
 
 export async function createTextChannel(data: {
   name: string;
   topic?: number;
   parentId?: string;
-}): Promise<GuildTextChannel> {
+}): Promise<TextChannel> {
   const query: QueryFilter<ChannelDoc> = data.parentId
     ? { parentId: data.parentId }
     : { parentId: { $exists: false } };
   const count = await ChannelModel.countDocuments(query);
-  const doc = await new GuildTextChannelModel({
+  const doc = await new TextChannelModel({
     ...data,
     position: count,
     createdAt: new Date(),
   }).save();
-  return toApiResponse<GuildTextChannel>(doc);
+  return toApiResponse<TextChannel>(doc);
 }
 
-export async function updateGuildTextChannel(id: string, patch: Partial<Omit<GuildTextChannel,
-  "id" | "updatedAt" | "createdAt">>): Promise<GuildTextChannel | null> {
+export async function updateGuildTextChannel(id: string, patch: Partial<Omit<TextChannel,
+  "id" | "updatedAt" | "createdAt">>): Promise<TextChannel | null> {
   const $set: Record<string, unknown> = {};
   const $unset: Record<string, ""> = {};
 
@@ -30,13 +30,13 @@ export async function updateGuildTextChannel(id: string, patch: Partial<Omit<Gui
     else $set[k] = v;
   }
 
-  const update: Record<string, UpdateQuery<GuildTextChannel>> = {};
+  const update: Record<string, UpdateQuery<TextChannel>> = {};
   if (Object.keys($set).length) update.$set = $set;
   if (Object.keys($unset).length) update.$unset = $unset;
-  const doc = await GuildTextChannelModel.findByIdAndUpdate(
+  const doc = await TextChannelModel.findByIdAndUpdate(
     id,
     update,
     { new: true },
-  ).lean<GuildTextChannelDoc>();
-  return toApiResponse<GuildTextChannel>(doc);
+  ).lean<TextChannelDoc>();
+  return toApiResponse<TextChannel>(doc);
 }
