@@ -8,7 +8,6 @@ import { GroupDMChannel } from "./groupDmChannel";
 export interface BaseChannel {
   id: string;
   type: ChannelType;
-  name: string;
   createdAt: Date;
   updatedAt?: Date;
 }
@@ -35,7 +34,6 @@ const BaseChannelSchema: Schema = new Schema(
   {
     _id: { type: String, required: true, alias: "id" },
     type: { type: Number, required: true },
-    name: { type: String, required: true },
     createdAt: { type: Date, required: true, default: Date.now },
     updatedAt: { type: Date, optional: true },
   },

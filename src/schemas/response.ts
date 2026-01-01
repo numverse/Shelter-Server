@@ -7,6 +7,7 @@ export const TextChannel = Type.Object({
   type: Type.Enum(ChannelType, { const: ChannelType.GuildText }),
   name: parts.channelNameType,
   parentId: Type.Optional(parts.snowflakeType),
+  position: parts.channelPositionType,
   topic: Type.Optional(parts.channelTopicType),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
@@ -16,6 +17,7 @@ export const VoiceChannel = Type.Object({
   type: Type.Enum(ChannelType, { const: ChannelType.GuildVoice }),
   name: parts.channelNameType,
   parentId: Type.Optional(parts.snowflakeType),
+  position: parts.channelPositionType,
   topic: Type.Optional(parts.channelTopicType),
   bitrate: parts.channelBitrateType,
   createdAt: parts.dateStringType,
@@ -25,13 +27,20 @@ export const CategoryChannel = Type.Object({
   id: parts.snowflakeType,
   type: Type.Enum(ChannelType, { const: ChannelType.GuildCategory }),
   name: parts.channelNameType,
-  childIds: Type.Optional(Type.Array(parts.snowflakeType)),
+  position: parts.channelPositionType,
+  createdAt: parts.dateStringType,
+  updatedAt: Type.Optional(parts.dateStringType),
+});
+export const DMChannel = Type.Object({
+  id: parts.snowflakeType,
+  type: Type.Enum(ChannelType, { const: ChannelType.DM }),
   createdAt: parts.dateStringType,
   updatedAt: Type.Optional(parts.dateStringType),
 });
 
 export const ChannelResponse = Type.Union([
   TextChannel,
+  DMChannel,
   VoiceChannel,
   CategoryChannel,
 ]);

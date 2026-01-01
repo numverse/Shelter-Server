@@ -3,6 +3,7 @@ import { BaseChannel, ChannelModel, ChannelType } from ".";
 
 export interface CategoryChannel extends BaseChannel {
   type: ChannelType.GuildCategory;
+  name: string;
   position: number;
 }
 export interface CategoryChannelDoc extends Omit<CategoryChannel, "id"> {
@@ -10,6 +11,7 @@ export interface CategoryChannelDoc extends Omit<CategoryChannel, "id"> {
 }
 
 const CategorySchema: Schema = new Schema({
+  name: { type: String, required: true },
   position: { type: Number, required: true },
 });
 

@@ -3,6 +3,7 @@ import { BaseChannel, ChannelModel, ChannelType } from ".";
 
 export interface GuildTextChannel extends BaseChannel {
   type: ChannelType.GuildText;
+  name: string;
   topic?: string;
   position: number;
   parentId?: string;
@@ -13,6 +14,7 @@ export interface GuildTextChannelDoc extends Omit<GuildTextChannel, "id"> {
 }
 
 const GuildTextChannelSchema: Schema = new Schema({
+  name: { type: String, required: true },
   topic: { type: String, optional: true },
   parent: { type: String, optional: true },
   position: { type: Number, required: true },

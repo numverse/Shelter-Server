@@ -56,6 +56,11 @@ export const channelBitrateType = Type.Number({
   description: "The bitrate of the voice channel in bits per second",
 });
 
+export const channelPositionType = Type.Number({
+  minimum: 0,
+  description: "The position of the channel in the channel list",
+});
+
 export const emojiPackNameType = Type.String({
   minLength: 1,
   maxLength: 32,
