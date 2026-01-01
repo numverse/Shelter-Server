@@ -7,9 +7,9 @@ import { CHANNEL_NOT_FOUND, AUTHENTICATION_REQUIRED, PERMISSION_DENIED } from "s
 import { UserFlags } from "src/database/models/userModel";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.patch("/:id", {
+  fastify.patch("/:channelId", {
     schema: {
-      params: Type.Object({ id: snowflakeType }),
+      params: Type.Object({ channelId: snowflakeType }),
       body: Type.Object({
         name: Type.Optional(channelNameType),
         topic: Type.Optional(channelTopicType),
@@ -33,10 +33,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(403).send(PERMISSION_DENIED);
       }
 
-      const { id } = request.params;
+      const { channelId } = request.params;
       const body = request.body;
 
-      const channel = await channelRepo.updateChannel(id, body);
+      const channel = await channelRepo.updateChannel(channelId, body);
       if (!channel) {
         return reply.status(404).send(CHANNEL_NOT_FOUND);
       }
@@ -45,7 +45,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         type: "CHANNEL_UPDATE",
         payload: channel,
       });
-
       return reply.send({
         ...channel,
         createdAt: channel.createdAt.toISOString(),
