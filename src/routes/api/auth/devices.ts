@@ -8,7 +8,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     schema: {
       response: {
         200: Type.Array(Type.Object({
-          deviceId: Type.String(),
+          hashedDeviceId: Type.String(),
           userAgent: Type.String(),
           ipAddress: Type.Union([
             Type.String({ format: "ipv4" }),
