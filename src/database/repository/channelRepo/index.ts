@@ -34,12 +34,36 @@ export async function findAllChannels(): Promise<Channel[]> {
   return toApiResponseArray(docs);
 }
 
-export async function createChannel<T extends ChannelType>(data: { type: T; id: string }): Promise<Channel> {
+export async function createChannel<T extends ChannelType>(data: { type: T; id: string; parentId?: string }): Promise<Channel> {
+  const query: QueryFilter<ChannelDoc> = data.parentId
+    ? { parentId: data.parentId }
+    : { parentId: { $exists: false } };
+  const count = await ChannelModel.countDocuments(query);
   const doc = await new channelTypeToModel[data.type]({
     ...data,
+    position: count,
     createdAt: new Date(),
   }).save();
   return toApiResponse(doc);
+}
+
+export async function setChannelOrder(...order: {
+  id: string;
+  position: number;
+  parentId?: string;
+}[]) {
+  const bulkOps = order.map((item) => ({
+    updateOne: {
+      filter: { _id: item.id },
+      update: {
+        position: item.position,
+        parentId: item.parentId,
+        updatedAt: new Date(),
+      },
+    },
+  }));
+  if (bulkOps.length === 0) return;
+  return await ChannelModel.bulkWrite(bulkOps);
 }
 
 export async function updateChannel(id: string, update: Partial<Channel>): Promise<Channel | null> {

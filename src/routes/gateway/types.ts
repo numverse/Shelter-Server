@@ -14,6 +14,9 @@ export interface PresenceUpdatePayload {
   status: "online" | "offline" | "away" | "dnd";
 }
 
+type PartialChannelWithId = Partial<Channel> & { id: string };
+type ChannelUpdatePayload = PartialChannelWithId | PartialChannelWithId[];
+
 // Discriminated union for WebSocket messages
 export type WSMessage
   = | { type: "MESSAGE_CREATE"; payload: IMessage }
@@ -23,7 +26,7 @@ export type WSMessage
     | { type: "REACTION_REMOVE"; payload: ReactionPayload }
     | { type: "PRESENCE_UPDATE"; payload: PresenceUpdatePayload }
     | { type: "CHANNEL_CREATE"; payload: Channel }
-    | { type: "CHANNEL_UPDATE"; payload: Channel }
+    | { type: "CHANNEL_UPDATE"; payload: ChannelUpdatePayload }
     | { type: "CHANNEL_DELETE"; payload: { channelId: string } };
 
 export enum GatewayOpCode {

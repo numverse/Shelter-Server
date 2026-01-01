@@ -86,6 +86,12 @@ export const CHANNEL_NOT_EXIST_OR_INACCESSIBLE = {
   error: "Not Found",
   statusCode: 404,
 };
+export const CHANNEL_UPDATE_FAILED = {
+  code: "CHANNEL_UPDATE_FAILED",
+  message: "Failed to update channel.",
+  error: "Internal Server Error",
+  statusCode: 500,
+};
 
 // Emoji Errors
 export const EMOJI_NOT_FOUND = {
