@@ -56,9 +56,11 @@ export async function setChannelOrder(...order: {
     updateOne: {
       filter: { _id: item.channelId },
       update: {
-        position: item.position,
-        parentId: item.parentId,
-        updatedAt: new Date(),
+        $set: {
+          position: item.position,
+          parentId: item.parentId,
+          updatedAt: new Date(),
+        },
       },
     },
   }));

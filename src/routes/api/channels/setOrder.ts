@@ -39,7 +39,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       fastify.broadcast({
-        type: "CHANNEL_UPDATE",
+        type: "MULTIPLE_CHANNEL_UPDATE",
         payload: request.body.map((item) => ({
           id: item.channelId,
           position: item.position,
