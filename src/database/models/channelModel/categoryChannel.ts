@@ -1,20 +1,16 @@
 import { Schema } from "mongoose";
-import { ChannelModel, ChannelType } from ".";
+import { BaseChannel, ChannelModel, ChannelType } from ".";
 
-export interface CategoryChannel {
-  id: string;
+export interface CategoryChannel extends BaseChannel {
   type: ChannelType.GuildCategory;
-  name: string;
-  createdAt: Date;
-  updatedAt?: Date;
-  childIds: string[];
+  position: number;
 }
 export interface CategoryChannelDoc extends Omit<CategoryChannel, "id"> {
   _id: string;
 }
 
 const CategorySchema: Schema = new Schema({
-  childIds: { type: [String], default: [] },
+  position: { type: Number, required: true },
 });
 
 export const CategoryChannelModel = ChannelModel.discriminator<CategoryChannelDoc>(

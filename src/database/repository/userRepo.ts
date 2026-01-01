@@ -4,17 +4,17 @@ import { toApiResponse, toApiResponseArray } from "../utils";
 import { Types, UpdateQuery } from "mongoose";
 
 export async function existsUserById(id: string): Promise<boolean> {
-  const exists = await UserModel.exists({ _id: id });
+  const exists = await UserModel.exists({ _id: id }).lean<IUserDoc>();
   return exists !== null;
 }
 
 export async function existsUserByUsername(username: string): Promise<boolean> {
-  const exists = await UserModel.exists({ username });
+  const exists = await UserModel.exists({ username }).lean<IUserDoc>();
   return exists !== null;
 }
 
 export async function existsUserByEmail(email: string): Promise<boolean> {
-  const exists = await UserModel.exists({ email });
+  const exists = await UserModel.exists({ email }).lean<IUserDoc>();
   return exists !== null;
 }
 
@@ -49,12 +49,12 @@ export async function findUsersByUsernames(usernames: string[]): Promise<IUser[]
 }
 
 export async function hasAllUserFlags(id: string, ...flags: UserFlags[]): Promise<boolean> {
-  const exists = await UserModel.exists({ _id: id, flags: { $bitsAllSet: flags.reduce((acc, flag) => acc | flag, 0) } });
+  const exists = await UserModel.exists({ _id: id, flags: { $bitsAllSet: flags.reduce((acc, flag) => acc | flag, 0) } }).lean<IUserDoc>(); ;
   return exists !== null;
 }
 
 export async function hasAnyUserFlags(id: string, ...flags: UserFlags[]): Promise<boolean> {
-  const exists = await UserModel.exists({ _id: id, flags: { $bitsAnySet: flags.reduce((acc, flag) => acc | flag, 0) } });
+  const exists = await UserModel.exists({ _id: id, flags: { $bitsAnySet: flags.reduce((acc, flag) => acc | flag, 0) } }).lean<IUserDoc>(); ;
   return exists !== null;
 }
 

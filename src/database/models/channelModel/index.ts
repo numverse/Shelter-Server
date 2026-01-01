@@ -5,6 +5,14 @@ import { CategoryChannel } from "./categoryChannel";
 import { DMChannel } from "./dmChannel";
 import { GroupDMChannel } from "./groupDmChannel";
 
+export interface BaseChannel {
+  id: string;
+  type: ChannelType;
+  name: string;
+  createdAt: Date;
+  updatedAt?: Date;
+}
+
 export type Channel = GuildTextChannel
   | DMChannel
   | VoiceChannel

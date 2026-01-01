@@ -1,15 +1,12 @@
 import { Schema } from "mongoose";
-import { ChannelModel, ChannelType } from ".";
+import { BaseChannel, ChannelModel, ChannelType } from ".";
 
-export interface VoiceChannel {
-  id: string;
+export interface VoiceChannel extends BaseChannel {
   type: ChannelType.GuildVoice;
-  name: string;
   bitrate: number;
   topic?: string;
-  createdAt: Date;
-  updatedAt?: Date;
   parentId?: string;
+  position: number;
 }
 export interface VoiceChannelDoc extends Omit<VoiceChannel, "id"> {
   _id: string;
@@ -18,6 +15,7 @@ export interface VoiceChannelDoc extends Omit<VoiceChannel, "id"> {
 const VoiceChannelSchema: Schema = new Schema({
   topic: { type: String, optional: true },
   parent: { type: String, optional: true },
+  position: { type: Number, required: true },
   bitrate: { type: Number, default: 64000 },
 });
 

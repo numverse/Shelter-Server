@@ -1,13 +1,10 @@
 import { Schema } from "mongoose";
-import { ChannelModel, ChannelType } from ".";
+import { BaseChannel, ChannelModel, ChannelType } from ".";
 
-export interface GuildTextChannel {
-  id: string;
+export interface GuildTextChannel extends BaseChannel {
   type: ChannelType.GuildText;
-  name: string;
   topic?: string;
-  createdAt: Date;
-  updatedAt?: Date;
+  position: number;
   parentId?: string;
 }
 
@@ -18,6 +15,7 @@ export interface GuildTextChannelDoc extends Omit<GuildTextChannel, "id"> {
 const GuildTextChannelSchema: Schema = new Schema({
   topic: { type: String, optional: true },
   parent: { type: String, optional: true },
+  position: { type: Number, required: true },
 });
 
 export const GuildTextChannelModel = ChannelModel.discriminator<GuildTextChannelDoc>(

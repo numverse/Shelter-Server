@@ -1,12 +1,8 @@
 import { Schema } from "mongoose";
-import { ChannelModel, ChannelType } from ".";
+import { BaseChannel, ChannelModel, ChannelType } from ".";
 
-export interface GroupDMChannel {
-  id: string;
+export interface GroupDMChannel extends BaseChannel {
   type: ChannelType.GroupDM;
-  name: string;
-  createdAt: Date;
-  updatedAt?: Date;
 }
 
 export interface GroupDMChannelDoc extends Omit<GroupDMChannel, "id"> {
@@ -14,8 +10,6 @@ export interface GroupDMChannelDoc extends Omit<GroupDMChannel, "id"> {
 }
 
 const GroupDMChannelSchema: Schema = new Schema({
-  topic: { type: String, optional: true },
-  parent: { type: String, optional: true },
 });
 
 export const GroupDMChannelModel = ChannelModel.discriminator<GroupDMChannelDoc>(
