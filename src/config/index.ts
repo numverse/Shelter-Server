@@ -30,6 +30,8 @@ export const ACCESS_TOKEN_EXPIRES_IN = "5m";
 export const REFRESH_TOKEN_EXPIRES_IN = "7d";
 
 // Cookie settings
+export const COOKIE_SECRET
+  = process.env.COOKIE_SECRET || "shelter-cookie-secret-key-change-in-production";
 export const COOKIE_OPTIONS = {
   httpOnly: true,
   secure: true, // NODE_ENV === "production",

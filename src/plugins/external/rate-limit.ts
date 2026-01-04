@@ -1,6 +1,6 @@
 import fastifyRateLimit, { type errorResponseBuilderContext } from "@fastify/rate-limit";
 import type { FastifyInstance, FastifyRequest } from "fastify";
-import { RATE_LIMIT_MAX } from "../../config.js";
+import { RATE_LIMIT_MAX } from "../../config/index.js";
 import { RATE_LIMIT_EXCEEDED } from "../../schemas/errors";
 import { redis } from "bun";
 

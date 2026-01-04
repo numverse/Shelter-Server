@@ -10,4 +10,4 @@ COPY tsconfig.json ./
 
 EXPOSE 3000
 
-CMD ["bun", "run", "src/index.ts"]
+CMD ["bun", "run", "src/server.ts"]

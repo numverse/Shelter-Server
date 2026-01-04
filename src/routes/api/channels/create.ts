@@ -1,5 +1,4 @@
 ﻿import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { generateSnowflake } from "../../../utils/snowflake";
 import * as userRepo from "../../../database/repository/userRepo";
 import * as channelRepo from "../../../database/repository/channelRepo";
 import { ChannelResponse, ErrorResponse } from "../../../schemas/response";
@@ -32,7 +31,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const channel = await channelRepo.createChannel({
-        id: generateSnowflake(),
+        id: fastify.snowflake.generate(),
         ...request.body,
       });
       if (!channel) {

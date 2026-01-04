@@ -1,6 +1,5 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import path from "path";
-import { generateSnowflake } from "../../../utils/snowflake";
 import * as emojiPackRepo from "../../../database/repository/emojiPackRepo";
 import { EmojiPackResponse, ErrorResponse } from "src/schemas/response";
 import { emojiPackNameType, emojiNameType, fileType, snowflakeType } from "src/schemas/types";
@@ -120,7 +119,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           emojiName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase();
         }
 
-        const emojiId = generateSnowflake();
+        const emojiId = fastify.snowflake.generate();
 
         updatedEmojis.push({
           id: emojiId,

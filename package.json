@@ -1,11 +1,11 @@
 {
   "name": "shelter-server",
-  "module": "src/index.ts",
+  "module": "src/server.ts",
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --env-file=.env run src/index.ts",
-    "start": "NODE_ENV=production bun run src/index.ts"
+    "dev": "bun --env-file=.env run src/server.ts",
+    "start": "NODE_ENV=production bun run src/server.ts"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^5.6.1",

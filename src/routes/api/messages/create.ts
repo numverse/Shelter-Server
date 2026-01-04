@@ -1,10 +1,9 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { generateSnowflake } from "../../../utils/snowflake";
 import * as messageRepo from "../../../database/repository/messageRepo";
 import * as fileRepo from "../../../database/repository/fileRepo";
 import * as channelRepo from "../../../database/repository/channelRepo";
 import type { IAttachment } from "../../../database/models/messageModel";
-import { fileType, messageContentType, snowflakeType } from "src/schemas/types";
+import { messageContentType, snowflakeType } from "src/schemas/types";
 import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_EXIST_OR_INACCESSIBLE, FILE_TOO_LARGE, MISSING_REQUIRED_FIELDS } from "src/schemas/errors";
 import { MessageResponse, ErrorResponse } from "src/schemas/response";
 import { ChannelType } from "src/database/models/channelModel";
@@ -15,12 +14,10 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
     schema: {
-      consumes: ["multipart/form-data"],
       body: Type.Object({
         channelId: snowflakeType,
         content: messageContentType,
         replyTo: Type.Optional(snowflakeType),
-        files: Type.Optional(fileType),
       }),
       response: {
         201: MessageResponse,
@@ -37,53 +34,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         return reply.status(401).send(AUTHENTICATION_REQUIRED);
       }
 
-      const fields: Record<string, string> = {};
-      const attachments: IAttachment[] = [];
-
-      const parts = request.parts();
-      for await (const part of parts) {
-        if (part.type === "file") {
-          const chunks: Buffer[] = [];
-          let size = 0;
-
-          for await (const chunk of part.file) {
-            size += chunk.length;
-            if (size > MAX_FILE_SIZE) {
-              return reply.status(400).send(FILE_TOO_LARGE);
-            }
-            chunks.push(chunk);
-          }
-
-          const buffer = Buffer.concat(chunks);
-          const mimeType = part.mimetype || "application/octet-stream";
-          const fileId = generateSnowflake();
-
-          // Save file to GridFS
-          await fileRepo.createFile({
-            id: fileId,
-            filename: part.filename,
-            mimeType,
-            size: buffer.length,
-            buffer,
-            uploaderId: fields.userId || "",
-          });
-
-          attachments.push({
-            id: fileId,
-            filename: part.filename,
-            mimeType,
-            size: buffer.length,
-          });
-        } else {
-          fields[part.fieldname] = String((part as { value: unknown }).value);
-        }
-      }
-
-      const { channelId, content, replyTo } = fields;
-
-      if (!channelId || (!content && attachments.length === 0)) {
-        return reply.status(400).send(MISSING_REQUIRED_FIELDS);
-      }
+      const { channelId, content, replyTo } = request.body;
 
       const channelExists = await channelRepo.existsChannel(channelId, ChannelType.GuildText, ChannelType.GuildVoice);
       if (!channelExists) {
@@ -91,12 +42,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const message = await messageRepo.createMessage({
-        id: generateSnowflake(),
+        id: fastify.snowflake.generate(),
         channelId,
-        content: content || "",
+        content: content,
         authorId: request.userId,
         replyTo,
-        attachments,
+        // attachments,
       });
 
       fastify.broadcast({ type: "MESSAGE_CREATE", payload: message });

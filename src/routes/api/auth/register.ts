@@ -1,6 +1,5 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import * as userRepo from "src/database/repository/userRepo";
-import { generateSnowflake } from "src/utils/snowflake";
 import { displayNameType, emailType, passwordType, usernameType, XDeviceIdHeader } from "src/schemas/types";
 import { ErrorResponse, SuccessResponse } from "src/schemas/response";
 import { EMAIL_EXISTS, REGISTRATION_FAILED, TOKEN_GENERATION_FAILED, USERNAME_TAKEN } from "src/schemas/errors";
@@ -44,7 +43,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       const hashedPassword = await fastify.passwordManager.hash(password);
-      const userId = generateSnowflake();
+      const userId = fastify.snowflake.generate();
 
       const verificationCode = fastify.tokenManager.generateToken("email", {
         userId,
