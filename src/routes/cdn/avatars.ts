@@ -1,8 +1,10 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+
 import * as userRepo from "../../database/repository/userRepo";
-import { ErrorResponse } from "src/schemas/response";
-import { INVALID_RESOURCE } from "src/schemas/errors";
-import { fileType } from "src/schemas/types";
+
+import { ErrorResponse } from "src/common/schemas/response";
+import { fileType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.get("/avatars/:userId/:avatar", {
@@ -27,16 +29,16 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const user = await userRepo.findUserById(userId);
       if (!user || !user.avatarId) {
-        return reply.status(404).send(INVALID_RESOURCE);
+        throw new AppError("INVALID_RESOURCE");
       }
 
       if (user.avatarId.toString() !== avatarId) {
-        return reply.status(404).send(INVALID_RESOURCE);
+        throw new AppError("INVALID_RESOURCE");
       }
 
       const stream = userRepo.getAvatarStream(avatarId);
       if (!stream || !mimeType) {
-        return reply.status(404).send(INVALID_RESOURCE);
+        throw new AppError("INVALID_RESOURCE");
       }
 
       reply.header("Content-Type", `image/${mimeType}`);

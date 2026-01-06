@@ -1,5 +1,6 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as fileRepo from "../../database/repository/fileRepo";
+
+import * as fileRepo from "src/database/repository/fileRepo";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   // Inline view

@@ -1,5 +1,6 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { findEmojiById, getEmojiMimeType, getEmojiImageStream } from "../../database/repository/emojiPackRepo";
+
+import { findEmojiById, getEmojiMimeType, getEmojiImageStream } from "src/database/repository/emojiPackRepo";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.get("/emojis/:emojiId", {
