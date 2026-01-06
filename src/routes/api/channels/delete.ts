@@ -1,11 +1,13 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as channelRepo from "../../../database/repository/channelRepo";
-import * as messageRepo from "../../../database/repository/messageRepo";
-import * as userRepo from "../../../database/repository/userRepo";
-import { ErrorResponse, SuccessResponse } from "../../../schemas/response";
-import { snowflakeType } from "src/schemas/types";
-import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
+
+import * as channelRepo from "src/database/repository/channelRepo";
+import * as messageRepo from "src/database/repository/messageRepo";
+import * as userRepo from "src/database/repository/userRepo";
 import { UserFlags } from "src/database/models/userModel";
+
+import { ErrorResponse, SuccessResponse } from "src/common/schemas/response";
+import { snowflakeType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.delete("/:channelId", {
@@ -22,12 +24,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(403).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
       const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
         UserFlags.MODERATOR, UserFlags.DEVELOPER);
       if (!userAllowed) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const { channelId } = request.params;
@@ -36,7 +38,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const deleted = await channelRepo.deleteChannel(channelId);
       if (!deleted) {
-        return reply.status(404).send(CHANNEL_NOT_FOUND);
+        throw new AppError("CHANNEL_NOT_FOUND");
       }
 
       fastify.broadcast({

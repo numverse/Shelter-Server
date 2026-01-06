@@ -1,10 +1,12 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as channelRepo from "../../../database/repository/channelRepo";
-import * as userRepo from "../../../database/repository/userRepo";
-import { ErrorResponse, SuccessResponse } from "../../../schemas/response";
-import { snowflakeType, channelPositionType } from "src/schemas/types";
-import { AUTHENTICATION_REQUIRED, CHANNEL_UPDATE_FAILED, PERMISSION_DENIED } from "src/schemas/errors";
+
+import * as channelRepo from "src/database/repository/channelRepo";
+import * as userRepo from "src/database/repository/userRepo";
 import { UserFlags } from "src/database/models/userModel";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { snowflakeType, channelPositionType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.patch("/", {
@@ -16,8 +18,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       })),
       response: {
         200: SuccessResponse,
-        403: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Channels"],
       summary: "Set channel order",
@@ -25,26 +25,28 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(403).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
       const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
         UserFlags.MODERATOR, UserFlags.DEVELOPER);
       if (!userAllowed) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const channel = await channelRepo.setChannelOrder(...request.body);
       if (!channel) {
-        return reply.status(500).send(CHANNEL_UPDATE_FAILED);
+        throw new AppError("CHANNEL_UPDATE_FAILED");
       }
 
-      fastify.broadcast({
-        type: "MULTIPLE_CHANNEL_UPDATE",
-        payload: request.body.map((item) => ({
-          id: item.channelId,
-          position: item.position,
-          parentId: item.parentId,
-        })),
+      request.body.forEach((c) => {
+        fastify.broadcast({
+          type: "CHANNEL_UPDATE",
+          payload: {
+            id: c.channelId,
+            position: c.position,
+            parentId: c.parentId,
+          },
+        });
       });
       return reply.send({ success: true });
     },

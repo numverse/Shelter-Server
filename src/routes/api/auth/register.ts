@@ -1,8 +1,17 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+
 import * as userRepo from "src/database/repository/userRepo";
-import { displayNameType, emailType, passwordType, usernameType, XDeviceIdHeader } from "src/schemas/types";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { EMAIL_EXISTS, REGISTRATION_FAILED, TOKEN_GENERATION_FAILED, USERNAME_TAKEN } from "src/schemas/errors";
+
+import {
+  displayNameType,
+  emailType,
+  passwordType,
+  usernameType,
+  XDeviceIdHeader,
+} from "src/common/schemas/types";
+import { SuccessResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
+
 import { DOMAIN, PROTOCOL } from "src/config";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -17,8 +26,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         201: SuccessResponse,
-        400: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Auth"],
       summary: "Register a new user",
@@ -34,12 +41,8 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const { email, password, username, displayName } = request.body;
 
-      if (/^user_\d+$/.test(username)) {
-        return reply.status(400).send(USERNAME_TAKEN);
-      }
-
       if (await userRepo.existsUserByEmail(email)) {
-        return reply.status(400).send(EMAIL_EXISTS);
+        throw new AppError("EMAIL_EXISTS");
       }
 
       const hashedPassword = await fastify.passwordManager.hash(password);
@@ -58,7 +61,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         displayName: displayName,
       });
       if (!user) {
-        return reply.status(500).send(REGISTRATION_FAILED);
+        throw new AppError("REGISTRATION_FAILED");
       }
 
       const tokens = await fastify.tokenManager.createTokens({
@@ -69,7 +72,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         email: user.email,
       });
       if (!tokens) {
-        return reply.status(500).send(TOKEN_GENERATION_FAILED);
+        throw new AppError("TOKEN_GENERATION_FAILED");
       }
 
       const locale = request.headers["accept-language"]?.split(",")[0] || "en-US";

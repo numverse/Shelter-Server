@@ -1,10 +1,12 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as channelRepo from "../../../database/repository/channelRepo";
-import * as userRepo from "../../../database/repository/userRepo";
-import { ChannelResponse, ErrorResponse } from "../../../schemas/response";
-import { channelTopicType, channelNameType, snowflakeType } from "src/schemas/types";
-import { CHANNEL_NOT_FOUND, AUTHENTICATION_REQUIRED, PERMISSION_DENIED } from "src/schemas/errors";
+
+import * as channelRepo from "src/database/repository/channelRepo";
+import * as userRepo from "src/database/repository/userRepo";
 import { UserFlags } from "src/database/models/userModel";
+
+import { channelTopicType, channelNameType, snowflakeType } from "src/common/schemas/types";
+import { ChannelResponse, ErrorResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.patch("/:channelId", {
@@ -25,12 +27,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(403).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
       const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
         UserFlags.MODERATOR, UserFlags.DEVELOPER);
       if (!userAllowed) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const { channelId } = request.params;
@@ -38,7 +40,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const channel = await channelRepo.updateChannel(channelId, body);
       if (!channel) {
-        return reply.status(404).send(CHANNEL_NOT_FOUND);
+        throw new AppError("CHANNEL_NOT_FOUND");
       }
 
       fastify.broadcast({

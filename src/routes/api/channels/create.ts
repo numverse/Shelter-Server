@@ -1,10 +1,12 @@
 ﻿import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../database/repository/userRepo";
-import * as channelRepo from "../../../database/repository/channelRepo";
-import { ChannelResponse, ErrorResponse } from "../../../schemas/response";
-import { AUTHENTICATION_REQUIRED, CHANNEL_CREATION_FAILED, PERMISSION_DENIED } from "src/schemas/errors";
+
+import * as userRepo from "src/database/repository/userRepo";
+import * as channelRepo from "src/database/repository/channelRepo";
 import { UserFlags } from "src/database/models/userModel";
-import { CreateChannelQuery } from "src/schemas/query";
+
+import { ChannelResponse } from "src/common/schemas/response";
+import { CreateChannelQuery } from "src/common/schemas/query";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
@@ -12,8 +14,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       body: CreateChannelQuery,
       response: {
         201: ChannelResponse,
-        403: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Channels"],
       summary: "Create a new channel",
@@ -22,12 +22,12 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(403).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
       const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
         UserFlags.MODERATOR, UserFlags.DEVELOPER);
       if (!userAllowed) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const channel = await channelRepo.createChannel({
@@ -35,7 +35,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         ...request.body,
       });
       if (!channel) {
-        return reply.status(500).send(CHANNEL_CREATION_FAILED);
+        throw new AppError("CHANNEL_CREATION_FAILED");
       }
 
       fastify.broadcast({

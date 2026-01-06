@@ -1,8 +1,10 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { AUTHENTICATION_REQUIRED, PASSWORD_MISMATCH, INVALID_OR_EXPIRED_VERIFICATION_TOKEN, MISSING_REQUIRED_FIELDS, USER_UPDATE_FAILED } from "src/schemas/errors";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { passwordType } from "src/schemas/types";
+
 import * as userRepo from "src/database/repository/userRepo";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { passwordType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/reset-password", {
@@ -19,9 +21,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       ]),
       response: {
         200: SuccessResponse,
-        400: ErrorResponse,
-        401: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Auth"],
       summary: "Reset user password",
@@ -32,31 +31,31 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       if ("token" in request.body) {
         const payload = fastify.tokenManager.verifyToken("email", request.body.token);
         if (!payload) {
-          return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
+          throw new AppError("INVALID_OR_EXPIRED_VERIFICATION_TOKEN");
         }
         const hashedPassword = await fastify.passwordManager.hash(request.body.newPassword);
         const success = await userRepo.updateUserPassword(payload.userId, hashedPassword);
         if (!success) {
-          return reply.status(500).send(USER_UPDATE_FAILED);
+          throw new AppError("USER_UPDATE_FAILED");
         }
         return reply.send({ success: true });
       } else if ("oldPassword" in request.body) {
         const user = request.userId ? await userRepo.findUserById(request.userId) : null;
         if (!user) {
-          return reply.status(401).send(AUTHENTICATION_REQUIRED);
+          throw new AppError("AUTHENTICATION_REQUIRED");
         }
         const isMatch = await fastify.passwordManager.compare(request.body.oldPassword, user.password);
         if (!isMatch) {
-          return reply.status(400).send(PASSWORD_MISMATCH);
+          throw new AppError("PASSWORD_MISMATCH");
         }
         const hashedPassword = await fastify.passwordManager.hash(request.body.newPassword);
         const success = await userRepo.updateUserPassword(user.id, hashedPassword);
         if (!success) {
-          return reply.status(500).send(USER_UPDATE_FAILED);
+          throw new AppError("USER_UPDATE_FAILED");
         }
         return reply.send({ success: true });
       } else {
-        return reply.status(400).send(MISSING_REQUIRED_FIELDS);
+        throw new AppError("MISSING_REQUIRED_FIELDS");
       }
     },
   });

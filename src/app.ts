@@ -36,10 +36,18 @@ export async function createApp() {
   });
 
   await fastify.register(fastifyAutoload, {
-    dir: path.join(import.meta.dirname, "routes"),
-    autoHooks: true,
-    cascadeHooks: true,
-    options: {},
+    dir: path.join(import.meta.dirname, "routes/cdn"),
+    options: {
+      prefix: "/cdn",
+    },
+  });
+
+  await fastify.register(import("./routes/gateway"), {
+    prefix: "/gateway",
+  });
+
+  await fastify.register(import("./routes/api"), {
+    prefix: "/api",
   });
 
   // Request logging hook

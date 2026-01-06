@@ -1,8 +1,11 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { emailType } from "src/schemas/types";
+
 import * as userRepo from "src/database/repository/userRepo";
-import { USER_NOT_FOUND } from "src/schemas/errors";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { emailType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
+
 import { DOMAIN, PROTOCOL } from "src/config";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
@@ -13,8 +16,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         201: SuccessResponse,
-        401: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Auth"],
       summary: "Send password reset email",
@@ -31,7 +32,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       const user = await userRepo.findUserByEmail(request.body.email);
 
       if (!user) {
-        return reply.status(401).send(USER_NOT_FOUND);
+        throw new AppError("USER_NOT_FOUND");
       }
 
       const emailToken = fastify.tokenManager.generateToken("email", {

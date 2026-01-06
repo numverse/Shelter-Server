@@ -1,17 +1,18 @@
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { AUTHENTICATION_REQUIRED, PERMISSION_DENIED } from "src/schemas/errors";
-import { PROTOCOL, DOMAIN } from "../../../config";
+
 import { UserFlags } from "src/database/models/userModel";
 import * as userRepo from "src/database/repository/userRepo";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
+
+import { PROTOCOL, DOMAIN } from "src/config";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/resend", {
     schema: {
       response: {
         201: SuccessResponse,
-        401: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Auth"],
       summary: "Resend verification email",
@@ -26,11 +27,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const user = request.userId ? await userRepo.findUserById(request.userId) : null;
       if (!user) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       if (!fastify.bitFieldManager.match(user.flags, UserFlags.NONE)) {
-        return reply.status(401).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const emailToken = fastify.tokenManager.generateToken("email", {

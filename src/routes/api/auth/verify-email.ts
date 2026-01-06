@@ -1,8 +1,10 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+
 import * as userRepo from "src/database/repository/userRepo";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { INVALID_OR_EXPIRED_VERIFICATION_TOKEN, TOKEN_GENERATION_FAILED, USER_NOT_FOUND, USER_UPDATE_FAILED } from "src/schemas/errors";
+
+import { SuccessResponse } from "src/common/schemas/response";
 import { UserFlags } from "src/database/models/userModel";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/verify-email", {
@@ -12,8 +14,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         201: SuccessResponse,
-        400: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Auth"],
       summary: "Verify email address",
@@ -26,15 +26,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       const payload = fastify.tokenManager.verifyToken("email", token);
       if (!payload) {
-        return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
+        throw new AppError("INVALID_OR_EXPIRED_VERIFICATION_TOKEN");
       }
 
       const user = await userRepo.findUserById(payload.userId);
       if (!user) {
-        return reply.status(400).send(USER_NOT_FOUND);
+        throw new AppError("USER_NOT_FOUND");
       }
       if (user.email !== payload.email) {
-        return reply.status(400).send(INVALID_OR_EXPIRED_VERIFICATION_TOKEN);
+        throw new AppError("INVALID_OR_EXPIRED_VERIFICATION_TOKEN");
       }
 
       const tokens = await fastify.tokenManager.createTokens({
@@ -45,14 +45,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         email: payload.email,
       });
       if (!tokens) {
-        return reply.status(500).send(TOKEN_GENERATION_FAILED);
+        throw new AppError("TOKEN_GENERATION_FAILED");
       }
 
       const updatedUser = await userRepo.updateUser(payload.userId, {
         flags: UserFlags.MEMBER,
       });
       if (!updatedUser) {
-        return reply.status(500).send(USER_UPDATE_FAILED);
+        throw new AppError("USER_UPDATE_FAILED");
       }
 
       return reply.setTokenCookies(tokens.accessToken, tokens.refreshToken).send({ success: true });

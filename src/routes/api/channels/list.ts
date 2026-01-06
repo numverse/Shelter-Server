@@ -1,6 +1,8 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as channelRepo from "../../../database/repository/channelRepo";
-import { ChannelResponse } from "../../../schemas/response";
+
+import * as channelRepo from "src/database/repository/channelRepo";
+
+import { ChannelResponse } from "src/common/schemas/response";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.get("/", {

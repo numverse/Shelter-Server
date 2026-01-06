@@ -1,10 +1,11 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../database/redis/userRepo";
-import { ErrorResponse } from "src/schemas/response";
-import { AUTHENTICATION_REQUIRED } from "src/schemas/errors";
+
+import * as userRepo from "src/database/redis/userRepo";
+
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.post("/devices", {
+  fastify.get("/devices", {
     schema: {
       response: {
         200: Type.Array(Type.Object({
@@ -16,7 +17,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
           ]),
           lastUsedTime: Type.String({ format: "date-time" }),
         })),
-        401: ErrorResponse,
       },
       tags: ["Auth"],
       summary: "Get All Devices",
@@ -24,7 +24,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const devices = await userRepo.getAllDevices(request.userId);
