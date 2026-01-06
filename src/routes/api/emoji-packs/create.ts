@@ -1,9 +1,11 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
 import path from "path";
-import * as emojiPackRepo from "../../../database/repository/emojiPackRepo";
-import { EmojiPackResponse, ErrorResponse } from "src/schemas/response";
-import { AUTHENTICATION_REQUIRED, MISSING_REQUIRED_FIELDS, EMOJI_PACK_CREATION_FAILED, EMOJI_LIMIT_EXCEEDED } from "src/schemas/errors";
-import { fileType, emojiPackNameType, emojiNameType } from "src/schemas/types";
+
+import * as emojiPackRepo from "src/database/repository/emojiPackRepo";
+
+import { fileType, emojiPackNameType, emojiNameType } from "src/common/schemas/types";
+import { EmojiPackResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
@@ -17,9 +19,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         201: EmojiPackResponse,
-        401: ErrorResponse,
-        400: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Emoji Packs"],
       summary: "Create an emoji pack",
@@ -27,7 +26,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       let name = "";
@@ -56,11 +55,11 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }
 
       if (!name || files.length === 0 || files.length !== emojiNames.length) {
-        return reply.status(400).send(MISSING_REQUIRED_FIELDS);
+        throw new AppError("MISSING_REQUIRED_FIELDS");
       }
 
       if (files.length > 50) {
-        return reply.status(400).send(EMOJI_LIMIT_EXCEEDED);
+        throw new AppError("EMOJI_LIMIT_EXCEEDED");
       }
 
       const emojis = files.map((file, index) => {
@@ -89,7 +88,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         emojis,
       });
       if (!pack) {
-        return reply.status(500).send(EMOJI_PACK_CREATION_FAILED);
+        throw new AppError("EMOJI_PACK_CREATION_FAILED");
       }
 
       return reply.status(201).send({

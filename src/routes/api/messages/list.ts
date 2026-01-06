@@ -1,10 +1,12 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as messageRepo from "../../../database/repository/messageRepo";
-import { MessageResponse } from "src/schemas/response";
-import { snowflakeType } from "src/schemas/types";
+
+import * as messageRepo from "src/database/repository/messageRepo";
+
+import { MessageResponse } from "src/common/schemas/response";
+import { snowflakeType } from "src/common/schemas/types";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.get("/:channelId", {
+  fastify.get("/", {
     schema: {
       params: Type.Object({
         channelId: snowflakeType,

@@ -260,12 +260,6 @@ const errorMessages = {
     error: "Internal Server Error",
     statusCode: 500,
   },
-  // RATE_LIMIT_EXCEEDED: (sec: number) => ({
-  //     code: "RATE_LIMIT_EXCEEDED",
-  //     message: `Rate limit exceeded, retry in ${sec} seconds`,
-  //     error: "Too Many Requests",
-  //     statusCode: 429,
-  // }),
 };
 
 export { errorMessages };

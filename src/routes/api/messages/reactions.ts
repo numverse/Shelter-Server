@@ -1,8 +1,10 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as messageRepo from "../../../database/repository/messageRepo";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { AUTHENTICATION_REQUIRED, MESSAGE_NOT_FOUND } from "src/schemas/errors";
-import { snowflakeType } from "src/schemas/types";
+
+import * as messageRepo from "src/database/repository/messageRepo";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { snowflakeType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   // Add reaction
@@ -14,8 +16,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         200: SuccessResponse,
-        401: ErrorResponse,
-        404: ErrorResponse,
       },
       tags: ["Messages"],
       summary: "Add reaction",
@@ -23,14 +23,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const { messageId, emojiId } = request.params;
 
       const message = await messageRepo.addReaction(messageId, emojiId, request.userId);
       if (!message) {
-        return reply.status(404).send(MESSAGE_NOT_FOUND);
+        throw new AppError("MESSAGE_NOT_FOUND");
       }
 
       // Broadcast to all WebSocket clients
@@ -55,8 +55,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         204: SuccessResponse,
-        401: ErrorResponse,
-        404: ErrorResponse,
       },
       tags: ["Messages"],
       summary: "Remove reaction",
@@ -64,7 +62,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const { messageId, emojiId } = request.params;
@@ -75,7 +73,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         request.userId,
       );
       if (!message) {
-        return reply.status(404).send(MESSAGE_NOT_FOUND);
+        throw new AppError("MESSAGE_NOT_FOUND");
       }
 
       // Broadcast to all WebSocket clients

@@ -1,10 +1,12 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as emojiPackRepo from "../../../database/repository/emojiPackRepo";
-import * as userRepo from "../../../database/repository/userRepo";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { snowflakeType } from "src/schemas/types";
-import { AUTHENTICATION_REQUIRED, EMOJI_PACK_DELETE_FAILED, EMOJI_PACK_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
+
+import * as emojiPackRepo from "src/database/repository/emojiPackRepo";
+import * as userRepo from "src/database/repository/userRepo";
 import { UserFlags } from "src/database/models/userModel";
+
+import { ErrorResponse, SuccessResponse } from "src/common/schemas/response";
+import { snowflakeType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.delete("/:id", {
@@ -26,25 +28,25 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const user = request.userId ? await userRepo.findUserById(request.userId) : null;
       if (!user) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const { id } = request.params;
       const pack = await emojiPackRepo.findEmojiPackById(id);
       if (!pack) {
-        return reply.status(404).send(EMOJI_PACK_NOT_FOUND);
+        throw new AppError("EMOJI_PACK_NOT_FOUND");
       }
 
       // Check permission: creator only
       if (pack.creatorId !== user.id
         || fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)
       ) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const deleted = await emojiPackRepo.deleteEmojiPack(id);
       if (!deleted) {
-        return reply.status(500).send(EMOJI_PACK_DELETE_FAILED);
+        throw new AppError("EMOJI_PACK_DELETE_FAILED");
       }
 
       return reply.status(204).send({ success: true });

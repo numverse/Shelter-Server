@@ -1,9 +1,16 @@
 ﻿import fp from "fastify-plugin";
-import * as userRepo from "../../database/redis/userRepo";
-import { COOKIE_OPTIONS, ACCESS_TOKEN_MAX_AGE, REFRESH_TOKEN_MAX_AGE } from "../../config";
-import { DB_OPERATION_FAILED, INVALID_OR_EXPIRED_REFRESH_TOKEN, INVALID_USER_TOKEN, NO_REFRESH_TOKEN } from "src/schemas/errors";
+
+import * as userRepo from "src/database/redis/userRepo";
+
 import type { FastifyInstance, FastifyReply, FastifyRequest } from "fastify";
-import { XDeviceIdHeader } from "src/schemas/types";
+import { XDeviceIdHeader } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
+
+import {
+  COOKIE_OPTIONS,
+  ACCESS_TOKEN_MAX_AGE,
+  REFRESH_TOKEN_MAX_AGE,
+} from "src/config";
 
 declare module "fastify" {
   export interface FastifyRequest {
@@ -43,20 +50,20 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
     const payload = fastify.tokenManager.verifyToken("access", token);
     if (payload) {
       const exists = await userRepo.existsRefreshToken(payload.userId, deviceId);
-      if (!exists) return reply.status(401).send(INVALID_USER_TOKEN);
+      if (!exists) throw new AppError("INVALID_USER_TOKEN");
       return void (request.userId = payload.userId);
     }
   }
 
   const refreshToken = request.cookies?.rt;
-  if (!refreshToken) return reply.status(401).send(NO_REFRESH_TOKEN);
+  if (!refreshToken) throw new AppError("NO_REFRESH_TOKEN");
 
   const refreshPayload = fastify.tokenManager.verifyToken("refresh", refreshToken);
   if (refreshPayload) {
     try {
       const userRefreshToken = await userRepo.getRefreshToken(refreshPayload.userId, deviceId);
       if (userRefreshToken !== refreshToken) {
-        return reply.status(401).send(INVALID_OR_EXPIRED_REFRESH_TOKEN);
+        throw new AppError("INVALID_OR_EXPIRED_REFRESH_TOKEN");
       }
 
       const tokens = await fastify.tokenManager.createTokens({
@@ -68,7 +75,7 @@ async function authenticate(fastify: FastifyInstance, request: FastifyRequest, r
       });
       reply.setTokenCookies(tokens.accessToken, tokens.refreshToken);
     } catch {
-      return reply.status(500).send(DB_OPERATION_FAILED);
+      throw new AppError("DB_OPERATION_FAILED");
     }
     return void (request.userId = refreshPayload.userId);
   }
@@ -86,7 +93,9 @@ export default fp(
       const security = routeOptions.schema.security;
       if (!security || security?.length) {
         routeOptions.preHandler = async (request, reply) => {
-          await authenticate(fastify, request, reply);
+          await authenticate(fastify, request, reply).catch((err) => {
+            throw err;
+          });
         };
         routeOptions.schema.headers = XDeviceIdHeader;
       }

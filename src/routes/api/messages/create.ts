@@ -1,23 +1,25 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as messageRepo from "../../../database/repository/messageRepo";
-import * as channelRepo from "../../../database/repository/channelRepo";
-import { messageContentType, snowflakeType } from "src/schemas/types";
-import { AUTHENTICATION_REQUIRED, CHANNEL_NOT_EXIST_OR_INACCESSIBLE } from "src/schemas/errors";
-import { MessageResponse, ErrorResponse } from "src/schemas/response";
+
+import * as messageRepo from "src/database/repository/messageRepo";
+import * as channelRepo from "src/database/repository/channelRepo";
 import { ChannelType } from "src/database/models/channelModel";
+
+import { messageContentType, snowflakeType } from "src/common/schemas/types";
+import { MessageResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/", {
     schema: {
-      body: Type.Object({
+      params: Type.Object({
         channelId: snowflakeType,
+      }),
+      body: Type.Object({
         content: messageContentType,
         replyTo: Type.Optional(snowflakeType),
       }),
       response: {
         201: MessageResponse,
-        404: ErrorResponse,
-        401: ErrorResponse,
       },
       tags: ["Messages"],
       summary: "Create a new message",
@@ -25,14 +27,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
-      const { channelId, content, replyTo } = request.body;
+      const { channelId } = request.params;
+      const { content, replyTo } = request.body;
 
       const channelExists = await channelRepo.existsChannel(channelId, ChannelType.GuildText, ChannelType.GuildVoice);
       if (!channelExists) {
-        return reply.status(404).send(CHANNEL_NOT_EXIST_OR_INACCESSIBLE);
+        throw new AppError("CHANNEL_NOT_EXIST_OR_INACCESSIBLE");
       }
 
       const message = await messageRepo.createMessage({

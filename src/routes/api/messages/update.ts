@@ -1,14 +1,17 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
+
 import * as messageRepo from "../../../database/repository/messageRepo";
-import { messageContentType, snowflakeType } from "src/schemas/types";
-import { ErrorResponse, MessageResponse } from "src/schemas/response";
-import { AUTHENTICATION_REQUIRED, MESSAGE_NOT_FOUND, MESSAGE_UPDATE_FAILED, PERMISSION_DENIED } from "src/schemas/errors";
+
+import { messageContentType, snowflakeType } from "src/common/schemas/types";
+import { ErrorResponse, MessageResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
-  fastify.patch("/:messageId", {
+  fastify.patch("/", {
     schema: {
       params: Type.Object({
         messageId: snowflakeType,
+        channelId: snowflakeType,
       }),
       body: Type.Object({
         content: messageContentType,
@@ -26,7 +29,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const { messageId } = request.params;
@@ -35,15 +38,15 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       // Check if user owns the message
       const message = await messageRepo.findMessageById(messageId);
       if (!message) {
-        return reply.status(404).send(MESSAGE_NOT_FOUND);
+        throw new AppError("MESSAGE_NOT_FOUND");
       }
       if (message.authorId !== request.userId) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const updatedMessage = await messageRepo.updateMessageContent(messageId, content);
       if (!updatedMessage) {
-        return reply.status(500).send(MESSAGE_UPDATE_FAILED);
+        throw new AppError("MESSAGE_UPDATE_FAILED");
       }
 
       // Broadcast to all WebSocket clients

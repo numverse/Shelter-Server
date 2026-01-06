@@ -1,23 +1,22 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as messageRepo from "../../../database/repository/messageRepo";
-import * as userRepo from "../../../database/repository/userRepo";
-import { AUTHENTICATION_REQUIRED, MESSAGE_DELETE_FAILED, MESSAGE_NOT_FOUND, PERMISSION_DENIED } from "src/schemas/errors";
-import { ErrorResponse, SuccessResponse } from "src/schemas/response";
-import { snowflakeType } from "src/schemas/types";
+
+import * as messageRepo from "src/database/repository/messageRepo";
+import * as userRepo from "src/database/repository/userRepo";
 import { UserFlags } from "src/database/models/userModel";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { snowflakeType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.delete("/:messageId", {
     schema: {
       params: Type.Object({
         messageId: snowflakeType,
+        channelId: snowflakeType,
       }),
       response: {
         204: SuccessResponse,
-        401: ErrorResponse,
-        403: ErrorResponse,
-        404: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Messages"],
       summary: "Delete a message",
@@ -26,7 +25,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const user = request.userId ? await userRepo.findUserById(request.userId) : null;
       if (!user) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const { messageId } = request.params;
@@ -34,16 +33,16 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       // Check if user owns the message
       const message = await messageRepo.findMessageById(messageId);
       if (!message) {
-        return reply.status(404).send(MESSAGE_NOT_FOUND);
+        throw new AppError("MESSAGE_NOT_FOUND");
       }
       if (message.authorId !== user.id
         && !fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)) {
-        return reply.status(403).send(PERMISSION_DENIED);
+        throw new AppError("PERMISSION_DENIED");
       }
 
       const deleted = await messageRepo.deleteMessage(messageId);
       if (!deleted) {
-        return reply.status(500).send(MESSAGE_DELETE_FAILED);
+        throw new AppError("MESSAGE_DELETE_FAILED");
       }
 
       // Broadcast to all WebSocket clients
