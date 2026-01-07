@@ -1,15 +1,15 @@
 import { type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../../database/repository/userRepo";
-import { ErrorResponse, UserResponse } from "../../../../schemas/response";
-import { AUTHENTICATION_REQUIRED } from "src/schemas/errors";
+
+import * as userRepo from "src/database/repository/userRepo";
+
+import { UserResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.get("", {
     schema: {
       response: {
         200: UserResponse,
-        401: ErrorResponse,
-        404: ErrorResponse,
       },
       tags: ["Users/@me"],
       summary: "Get current user",
@@ -18,7 +18,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const user = request.userId ? await userRepo.findUserById(request.userId) : null;
       if (!user) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       return reply.send({

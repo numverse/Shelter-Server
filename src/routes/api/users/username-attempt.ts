@@ -1,5 +1,5 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../database/repository/userRepo";
+import { existsUserByUsername } from "src/database/repository/userRepo";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/username-attempt", {
@@ -18,7 +18,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       security: [],
     },
     handler: async (request, reply) => {
-      const taken = await userRepo.existsUserByUsername(request.body.username);
+      const taken = await existsUserByUsername(request.body.username);
       return reply.send({
         taken,
       });

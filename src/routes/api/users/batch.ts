@@ -1,7 +1,9 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../database/repository/userRepo";
-import { snowflakeType, usernameType } from "src/schemas/types";
-import { UserBasicResponse } from "src/schemas/response";
+
+import * as userRepo from "src/database/repository/userRepo";
+
+import { snowflakeType, usernameType } from "src/common/schemas/types";
+import { UserBasicResponse } from "src/common/schemas/response";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.post("/batch", {

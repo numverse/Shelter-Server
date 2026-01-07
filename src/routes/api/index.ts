@@ -22,6 +22,16 @@ const apiRoutes: FastifyPluginAsyncTypebox = async (fastify) => {
     dir: path.join(import.meta.dirname, "messages"),
     options: { prefix: "/channels/:channelId/messages" },
   });
+
+  fastify.register(fastifyAutoload, {
+    dir: path.join(import.meta.dirname, "users"),
+    options: { prefix: "/users" },
+  });
+
+  fastify.register(fastifyAutoload, {
+    dir: path.join(import.meta.dirname, "@me"),
+    options: { prefix: "/users/@me" },
+  });
 };
 
 export default apiRoutes;

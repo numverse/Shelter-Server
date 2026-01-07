@@ -1,8 +1,10 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../database/repository/userRepo";
-import { snowflakeType } from "src/schemas/types";
-import { ErrorResponse, UserBasicResponse } from "src/schemas/response";
-import { USER_NOT_FOUND } from "src/schemas/errors";
+
+import { findUserById } from "src/database/repository/userRepo";
+
+import { snowflakeType } from "src/common/schemas/types";
+import { UserBasicResponse } from "src/common/schemas/response";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.get("/:userId", {
@@ -10,7 +12,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       params: Type.Object({ userId: snowflakeType }),
       response: {
         200: UserBasicResponse,
-        404: ErrorResponse,
       },
       tags: ["Users"],
       summary: "Get user by ID",
@@ -18,10 +19,10 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       const { userId } = request.params;
-      const user = await userRepo.findUserById(userId);
+      const user = await findUserById(userId);
 
       if (!user) {
-        return reply.status(404).send(USER_NOT_FOUND);
+        throw new AppError("USER_NOT_FOUND");
       }
 
       return reply.send({

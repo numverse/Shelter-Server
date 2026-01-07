@@ -1,8 +1,10 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../../database/repository/userRepo";
-import { ErrorResponse, UserResponse } from "../../../../schemas/response";
-import { AUTHENTICATION_REQUIRED, MISSING_REQUIRED_FIELDS, USER_UPDATE_FAILED, USERNAME_TAKEN } from "src/schemas/errors";
-import { displayNameType, usernameType } from "src/schemas/types";
+
+import * as userRepo from "src/database/repository/userRepo";
+
+import { UserResponse } from "src/common/schemas/response";
+import { displayNameType, usernameType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.patch("/profile", {
@@ -13,9 +15,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         200: UserResponse,
-        401: ErrorResponse,
-        400: ErrorResponse,
-        500: ErrorResponse,
       },
       tags: ["Users/@me"],
       summary: "Update user profile",
@@ -23,25 +22,25 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     },
     handler: async (request, reply) => {
       if (!request.userId) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
 
       const { username } = request.body;
 
       if (!username && !("displayName" in request.body)) {
-        return reply.status(400).send(MISSING_REQUIRED_FIELDS);
+        throw new AppError("MISSING_REQUIRED_FIELDS");
       }
 
       if (username) {
         const exists = await userRepo.existsUserByUsername(username);
         if (exists) {
-          return reply.status(400).send(USERNAME_TAKEN);
+          throw new AppError("USERNAME_TAKEN");
         }
       }
 
       const updatedUser = await userRepo.updateUserProfile(request.userId, request.body);
       if (!updatedUser) {
-        return reply.status(500).send(USER_UPDATE_FAILED);
+        throw new AppError("USER_UPDATE_FAILED");
       }
 
       return reply.send({

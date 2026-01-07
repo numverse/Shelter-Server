@@ -1,6 +1,8 @@
 ﻿import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as userRepo from "../../../database/repository/userRepo";
-import { UserBasicResponse } from "src/schemas/response";
+
+import { findAllUsers } from "src/database/repository/userRepo";
+
+import { UserBasicResponse } from "src/common/schemas/response";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.get("/", {
@@ -15,7 +17,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       description: "Retrieve a list of all users",
     },
     handler: async (request, reply) => {
-      const users = await userRepo.findAllUsers();
+      const users = await findAllUsers();
       const usersResponse = users.map((user) => ({
         id: user.id,
         username: user.username,

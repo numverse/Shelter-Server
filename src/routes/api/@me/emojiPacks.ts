@@ -1,9 +1,11 @@
 import { Type, type FastifyPluginAsyncTypebox } from "@fastify/type-provider-typebox";
-import * as emojiPackRepo from "../../../../database/repository/emojiPackRepo";
-import * as userRepo from "../../../../database/repository/userRepo";
-import { ErrorResponse, SuccessResponse } from "../../../../schemas/response";
-import { snowflakeType } from "src/schemas/types";
-import { AUTHENTICATION_REQUIRED, EMOJI_PACK_NOT_FOUND } from "src/schemas/errors";
+
+import * as emojiPackRepo from "src/database/repository/emojiPackRepo";
+import * as userRepo from "src/database/repository/userRepo";
+
+import { SuccessResponse } from "src/common/schemas/response";
+import { snowflakeType } from "src/common/schemas/types";
+import { AppError } from "src/common/errors";
 
 const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
   fastify.put("/emoji-packs/:id", {
@@ -13,8 +15,6 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       }),
       response: {
         200: SuccessResponse,
-        404: ErrorResponse,
-        401: ErrorResponse,
       },
       tags: ["Users/@me"],
       summary: "Add emoji pack",
@@ -23,14 +23,14 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const user = request.userId ? await userRepo.findUserById(request.userId) : null;
       if (!user) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
       const { id } = request.params;
 
       if (!user.emojiPacks.includes(id)) {
         const packExists = await emojiPackRepo.existsEmojiPackById(id);
         if (!packExists) {
-          return reply.status(404).send(EMOJI_PACK_NOT_FOUND);
+          throw new AppError("EMOJI_PACK_NOT_FOUND");
         }
 
         await userRepo.addUserEmojiPack(user.id, id);
@@ -46,8 +46,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         id: Type.String(),
       }),
       response: {
-        204: Type.Null(),
-        401: ErrorResponse,
+        204: SuccessResponse,
       },
       tags: ["Users/@me"],
       summary: "Remove emoji pack",
@@ -56,7 +55,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
     handler: async (request, reply) => {
       const user = request.userId ? await userRepo.findUserById(request.userId) : null;
       if (!user) {
-        return reply.status(401).send(AUTHENTICATION_REQUIRED);
+        throw new AppError("AUTHENTICATION_REQUIRED");
       }
       const { id } = request.params;
 
@@ -66,7 +65,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         await userRepo.removeUserEmojiPack(user.id, id);
       }
 
-      return reply.status(204).send();
+      return reply.status(204).send({ success: true });
     },
   });
 };
