@@ -39,7 +39,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
 
       // Check permission: creator only
       if (pack.creatorId !== user.id
-        || fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR | UserFlags.DEVELOPER)
+        || fastify.bitFieldManager.hasEitherFlag(user.flags, UserFlags.MODERATOR)
       ) {
         throw new AppError("PERMISSION_DENIED");
       }

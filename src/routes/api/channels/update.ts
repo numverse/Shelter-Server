@@ -29,8 +29,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
       if (!request.userId) {
         throw new AppError("AUTHENTICATION_REQUIRED");
       }
-      const userAllowed = await userRepo.hasAnyUserFlags(request.userId,
-        UserFlags.MODERATOR, UserFlags.DEVELOPER);
+      const userAllowed = await userRepo.hasAnyUserFlags(request.userId, UserFlags.MODERATOR);
       if (!userAllowed) {
         throw new AppError("PERMISSION_DENIED");
       }
