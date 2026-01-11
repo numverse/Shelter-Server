@@ -26,7 +26,7 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         avatarId: user.avatarId?.toString(),
         createdAt: user.createdAt.toISOString(),
         presence: {
-          status: fastify.clientManager.getClient(user.id) ? "online" : "offline" as "online" | "offline" | "idle" | "dnd",
+          status: fastify.clientManager.getClient(user.id) ? "online" : "offline" as "online" | "offline" | "away" | "dnd",
         },
       }));
       return reply.send({

@@ -56,7 +56,7 @@ export const UserBasicResponse = Type.Object({
     status: Type.Union([
       Type.Literal("online"),
       Type.Literal("offline"),
-      Type.Literal("idle"),
+      Type.Literal("away"),
       Type.Literal("dnd"),
     ]),
   })),
