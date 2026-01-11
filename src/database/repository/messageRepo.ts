@@ -8,62 +8,44 @@ export async function findMessageById(id: string): Promise<IMessage | null> {
 }
 
 export async function findMessagesByChannel(
-  channelId: string,
-  limit = 50,
-  before?: string,
-): Promise<{ messages: IMessage[]; hasMore: boolean }> {
-  const query: { channelId: string; _id?: { $lt: string } } = { channelId };
-  if (before) {
-    query._id = { $lt: before };
+  channelId: string, opt: {
+    limit: number;
+    before?: string;
+    after?: string;
+    around?: string;
+  },
+): Promise<IMessage[]> {
+  if (opt.around) {
+    const docs = await MessageModel.aggregate<IMessageDoc>([
+      { $match: { channelId: channelId } },
+      {
+        $facet: {
+          before: [
+            { $match: { _id: { $lt: opt.around } } },
+            { $sort: { _id: -1 } },
+            { $limit: Math.ceil(opt.limit / 2) },
+          ],
+          after: [
+            { $match: { _id: { $gt: opt.around } } },
+            { $sort: { _id: 1 } },
+            { $limit: Math.floor(opt.limit / 2) },
+          ],
+        },
+      },
+    ]);
+    return toApiResponseArray<IMessage>(docs).reverse();
+  }
+  const query: { channelId: string; _id?: { $lt: string } | { $gt: string } } = { channelId };
+  if (opt.before) {
+    query._id = { $lt: opt.before };
+  } else if (opt.after) {
+    query._id = { $gt: opt.after };
   }
   const docs = await MessageModel.find(query)
     .sort({ createdAt: -1 })
-    .limit(limit + 1)
+    .limit(opt.limit)
     .lean<IMessageDoc[]>();
-
-  const hasMore = docs.length > limit;
-  const resultDocs = hasMore ? docs.slice(0, limit) : docs;
-  const messages = toApiResponseArray<IMessage>(resultDocs).reverse();
-
-  return { messages, hasMore };
-}
-
-export async function findMessagesAround(
-  messageId: string,
-  beforeCount = 20,
-  afterCount = 20,
-): Promise<{
-  anchor: IMessage | null;
-  before: { messages: IMessage[]; hasMore: boolean };
-  after: { messages: IMessage[]; hasMore: boolean };
-}> {
-  const anchorDoc = await MessageModel.findById(messageId).lean<IMessageDoc>();
-  if (!anchorDoc) return { anchor: null, before: { messages: [], hasMore: false }, after: { messages: [], hasMore: false } };
-
-  // messages before (older): _id < messageId, sort desc, then reverse to chronological asc
-  const beforeDocs = await MessageModel.find({ channelId: anchorDoc.channelId, _id: { $lt: messageId } })
-    .sort({ _id: -1 })
-    .limit(beforeCount + 1)
-    .lean<IMessageDoc[]>();
-
-  const afterDocs = await MessageModel.find({ channelId: anchorDoc.channelId, _id: { $gt: messageId } })
-    .sort({ _id: 1 })
-    .limit(afterCount + 1)
-    .lean<IMessageDoc[]>();
-
-  const before = toApiResponseArray<IMessage>(beforeDocs).reverse();
-  const after = toApiResponseArray<IMessage>(afterDocs);
-  const anchor = toApiResponse<IMessage>(anchorDoc);
-
-  return {
-    anchor, before: {
-      messages: before.length > beforeCount ? before.slice(1) : before,
-      hasMore: before.length > beforeCount,
-    }, after: {
-      messages: after.length > afterCount ? after.slice(1) : after,
-      hasMore: after.length > afterCount,
-    },
-  };
+  return toApiResponseArray<IMessage>(docs).reverse();
 }
 
 export async function createMessage(data: {
