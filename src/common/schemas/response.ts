@@ -52,6 +52,14 @@ export const UserBasicResponse = Type.Object({
   flags: parts.userFlagsType,
   avatarId: Type.Optional(parts.snowflakeType),
   createdAt: parts.dateStringType,
+  presence: Type.Optional(Type.Object({
+    status: Type.Union([
+      Type.Literal("online"),
+      Type.Literal("offline"),
+      Type.Literal("idle"),
+      Type.Literal("dnd"),
+    ]),
+  })),
 });
 
 export const UserResponse = Type.Object({

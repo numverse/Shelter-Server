@@ -13,16 +13,34 @@ import type { WebSocket } from "ws";
 const HEARTBEAT_INTERVAL_MS = 30_000; // send ping every 30s
 const HEARTBEAT_TIMEOUT_MS = 90_000; // consider dead after 90s
 
-interface ClientInfo { userId: string | null; lastSeen: number }
+interface ClientInfo { userId: string; lastSeen: number }
 
 const clients = new Map<WebSocket, ClientInfo>();
+const idToClient = new Map<string, WebSocket>();
 
-const addClient = (client: WebSocket, userId?: string) => {
-  clients.set(client, { userId: userId || null, lastSeen: Date.now() });
+const addClient = (client: WebSocket, userId: string) => {
+  clients.set(client, { userId: userId, lastSeen: Date.now() });
+  idToClient.set(userId, client);
 };
 
-const removeClient = (client: WebSocket) => {
-  clients.delete(client);
+const removeClient = (client: WebSocket | string) => {
+  if (typeof client === "string") {
+    const wsClient = idToClient.get(client);
+    if (wsClient) {
+      clients.delete(wsClient);
+      idToClient.delete(client);
+    }
+  } else {
+    const info = clients.get(client);
+    if (info) {
+      idToClient.delete(info.userId);
+      clients.delete(client);
+    }
+  }
+};
+
+const getClient = (userId: string) => {
+  return idToClient.get(userId) || null;
 };
 
 const markAlive = (client: WebSocket) => {
@@ -33,6 +51,7 @@ const markAlive = (client: WebSocket) => {
 const getUserId = (client: WebSocket) => clients.get(client)?.userId || null;
 
 const clientManager = {
+  getClient,
   addClient,
   removeClient,
   markAlive,

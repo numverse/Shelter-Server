@@ -25,6 +25,9 @@ const plugin: FastifyPluginAsyncTypebox = async (fastify) => {
         flags: user.flags,
         avatarId: user.avatarId?.toString(),
         createdAt: user.createdAt.toISOString(),
+        presence: {
+          status: fastify.clientManager.getClient(user.id) ? "online" : "offline" as "online" | "offline" | "idle" | "dnd",
+        },
       }));
       return reply.send({
         users: usersResponse,
